@@ -1,5 +1,13 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Start Here
+
+If you are setting up or deploying this project, read these first:
+
+- `docs/RUNBOOK.md` - local setup, env vars, SQL run order, troubleshooting.
+- `docs/RELEASE_CHECKLIST.md` - pre-deploy and post-deploy checks.
+- `docs/CHANGELOG_DEV.md` - plain-language history of implemented changes.
+
 ## Getting Started
 
 First, run the development server:

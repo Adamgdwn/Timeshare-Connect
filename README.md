@@ -7,6 +7,8 @@ If you are setting up or deploying this project, read these first:
 - `docs/RUNBOOK.md` - local setup, env vars, SQL run order, troubleshooting.
 - `docs/RELEASE_CHECKLIST.md` - pre-deploy and post-deploy checks.
 - `docs/CHANGELOG_DEV.md` - plain-language history of implemented changes.
+- `docs/BETA_TESTER_GUIDE.md` - script for testers and how to submit feedback.
+- `docs/PUBLISH_AND_SHARE_GUIDE.md` - exact steps to publish and share beta builds.
 
 ## Getting Started
 

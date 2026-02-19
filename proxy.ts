@@ -8,6 +8,7 @@ function getRequiredRole(pathname: string): Role | null {
   if (pathname === "/trips" || pathname.startsWith("/trips/")) return "traveler";
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "owner";
   if (pathname === "/offers" || pathname.startsWith("/offers/")) return "owner";
+  if (pathname === "/inventory" || pathname.startsWith("/inventory/")) return "owner";
   if (pathname === "/listings/new" || pathname.startsWith("/listings/new/")) return "owner";
   return null;
 }

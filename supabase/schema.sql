@@ -9,6 +9,7 @@ drop table if exists public.bookings cascade;
 drop table if exists public.offers cascade;
 drop table if exists public.listing_views cascade;
 drop table if exists public.listings cascade;
+drop table if exists public.owner_inventory cascade;
 drop table if exists public.profiles cascade;
 
 create or replace function public.set_updated_at()
@@ -36,9 +37,37 @@ create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
 
+create table public.owner_inventory (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  label text not null,
+  resort_name text not null,
+  city text not null,
+  country text,
+  ownership_type text not null default 'fixed_week' check (ownership_type in ('fixed_week', 'floating_week', 'points')),
+  season text,
+  home_week text,
+  points_power integer check (points_power is null or points_power > 0),
+  inventory_notes text,
+  unit_type text not null,
+  resort_booking_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger owner_inventory_set_updated_at
+before update on public.owner_inventory
+for each row execute function public.set_updated_at();
+
 create table public.listings (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
+  inventory_id uuid references public.owner_inventory(id) on delete set null,
+  ownership_type text not null default 'fixed_week' check (ownership_type in ('fixed_week', 'floating_week', 'points')),
+  season text,
+  home_week text,
+  points_power integer check (points_power is null or points_power > 0),
+  inventory_notes text,
   resort_name text not null,
   city text not null,
   country text,
@@ -140,6 +169,7 @@ create table public.resort_reviews (
 );
 
 create index listings_owner_id_idx on public.listings(owner_id);
+create index owner_inventory_owner_id_idx on public.owner_inventory(owner_id);
 create index listings_city_idx on public.listings(city);
 create index listings_dates_idx on public.listings(check_in_date, check_out_date);
 create index listings_active_idx on public.listings(is_active);

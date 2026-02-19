@@ -17,11 +17,15 @@ Use `.env.local` for machine-specific secrets (logins, API keys, tokens).
 ## Variable Notes
 
 - `NEXT_PUBLIC_*`: exposed to browser code. Never put private secrets here.
+- `NEXT_PUBLIC_ADMIN_CONTACT_EMAIL`: recipient used by in-app "Report a bug/idea" buttons.
+- `ADMIN_CONTACT_EMAIL`: server-side recipient for direct feedback email sending.
 - Server-only vars (no `NEXT_PUBLIC_` prefix): safe for backend use only.
 - `AUTH_SECRET`: long random secret used for session/token signing.
 - `DATABASE_URL`: database connection string.
 - `STRIPE_*`: payment integration credentials.
 - `SMTP_*`: email login and sender settings.
+- `RESEND_API_KEY`: API key for direct in-app feedback email sending.
+- `FEEDBACK_FROM_EMAIL`: verified sender address for feedback emails.
 - `S3_*`: file storage credentials.
 
 ## Optional Profiles

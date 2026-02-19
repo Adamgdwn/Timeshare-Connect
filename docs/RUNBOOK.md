@@ -26,6 +26,10 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...    # server-only
 STRIPE_SECRET_KEY=...            # placeholder if Stripe not wired yet
+NEXT_PUBLIC_ADMIN_CONTACT_EMAIL=...
+ADMIN_CONTACT_EMAIL=...
+RESEND_API_KEY=...
+FEEDBACK_FROM_EMAIL=...
 ```
 
 Notes:
@@ -40,7 +44,9 @@ Run in Supabase SQL Editor, in this order:
 2. `supabase/resort_reviews_migration.sql`
 3. `supabase/booking_cancel_fields.sql`
 4. `supabase/role_both_migration.sql`
-5. `supabase/rls.sql`
+5. `supabase/owner_inventory_migration.sql`
+6. `supabase/listing_inventory_migration.sql`
+7. `supabase/rls.sql`
 
 If starting from scratch instead:
 1. `supabase/schema.sql`
@@ -57,6 +63,8 @@ If starting from scratch instead:
 7. Admin sees bookings and user moderation controls.
 8. Traveler can submit owner and resort ratings when booking is `fully_paid`.
 9. Owner dashboard shows rating summary/comments.
+10. Owner can save templates in `/inventory` and use them in `/listings/new`.
+11. "Report a bug/idea" sends successfully from in-app dialog.
 
 ## 5. Common Errors
 
@@ -74,10 +82,15 @@ If starting from scratch instead:
 - Cause: cancellation migration not applied.
 - Fix: run `supabase/booking_cancel_fields.sql`.
 
+### Error: `Could not find the table 'public.owner_inventory' in the schema cache`
+- Cause: owner inventory migration not applied.
+- Fix:
+  1. Run `supabase/owner_inventory_migration.sql`
+  2. Re-run `supabase/rls.sql`
+
 ## 6. Lint/Build Commands
 
 ```bash
 npm run lint
 npm run build
 ```
-

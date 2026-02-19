@@ -12,7 +12,7 @@ export default function GlobalNav() {
       return;
     }
 
-    router.push("/");
+    router.push("/home");
   }
 
   return (
@@ -25,7 +25,7 @@ export default function GlobalNav() {
         >
           Back
         </button>
-        <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-800" href="/">
+        <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-800" href="/home">
           Home
         </Link>
       </div>

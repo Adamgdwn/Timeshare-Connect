@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import GlobalNav from "@/components/layout/GlobalNav";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <GlobalNav />
         {children}
+        <FeedbackWidget />
       </body>
     </html>
   );

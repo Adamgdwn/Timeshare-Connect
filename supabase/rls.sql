@@ -18,6 +18,7 @@ as $$
 $$;
 
 alter table public.profiles enable row level security;
+alter table public.owner_inventory enable row level security;
 alter table public.listings enable row level security;
 alter table public.listing_views enable row level security;
 alter table public.offers enable row level security;
@@ -69,6 +70,46 @@ for select
 using (
   is_active = true
   or owner_id = auth.uid()
+  or public.current_user_role() = 'admin'
+);
+
+drop policy if exists owner_inventory_select_owner_or_admin on public.owner_inventory;
+create policy owner_inventory_select_owner_or_admin
+on public.owner_inventory
+for select
+using (
+  owner_id = auth.uid()
+  or public.current_user_role() = 'admin'
+);
+
+drop policy if exists owner_inventory_insert_owner_or_admin on public.owner_inventory;
+create policy owner_inventory_insert_owner_or_admin
+on public.owner_inventory
+for insert
+with check (
+  (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
+  or public.current_user_role() = 'admin'
+);
+
+drop policy if exists owner_inventory_update_owner_or_admin on public.owner_inventory;
+create policy owner_inventory_update_owner_or_admin
+on public.owner_inventory
+for update
+using (
+  (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
+  or public.current_user_role() = 'admin'
+)
+with check (
+  (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
+  or public.current_user_role() = 'admin'
+);
+
+drop policy if exists owner_inventory_delete_owner_or_admin on public.owner_inventory;
+create policy owner_inventory_delete_owner_or_admin
+on public.owner_inventory
+for delete
+using (
+  (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
   or public.current_user_role() = 'admin'
 );
 

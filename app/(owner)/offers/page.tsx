@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
 import OwnerOfferActions from "@/features/offers/components/OwnerOfferActions";
+import OwnerWorkspaceNav from "@/features/owner/components/OwnerWorkspaceNav";
 
 type OfferRow = {
   id: string;
@@ -22,7 +23,21 @@ type OwnerListingRow = {
   owner_id: string;
 };
 
-export default async function OwnerOffersPage() {
+export default async function OwnerOffersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; bookingStatus?: string }>;
+}) {
+  const params = await searchParams;
+  const offerStatusFilter = (params.status || "").trim();
+  const bookingStatusFilter = (params.bookingStatus || "").trim();
+  const bookingStatusFilters = bookingStatusFilter
+    ? bookingStatusFilter
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : [];
+
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -52,11 +67,17 @@ export default async function OwnerOffersPage() {
   let error = ownerListingsError ?? null;
 
   if (!error && listingIds.length > 0) {
-    const { data: offersData, error: offersError } = await supabase
+    let offersQuery = supabase
       .from("offers")
       .select("id,listing_id,traveler_id,guest_count,note,status,created_at")
       .in("listing_id", listingIds)
       .order("created_at", { ascending: false });
+
+    if (offerStatusFilter) {
+      offersQuery = offersQuery.eq("status", offerStatusFilter);
+    }
+
+    const { data: offersData, error: offersError } = await offersQuery;
 
     error = offersError;
     offers = (offersData ?? []) as OfferRow[];
@@ -89,25 +110,44 @@ export default async function OwnerOffersPage() {
     });
   }
 
+  const filteredOffers =
+    bookingStatusFilters.length > 0
+      ? offers.filter((offer) => {
+          const booking = bookingByOffer.get(offer.id);
+          return booking ? bookingStatusFilters.includes(booking.status) : false;
+        })
+      : offers;
+
   return (
     <main className="mx-auto max-w-6xl p-8">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Owner Offers</h1>
         <div className="flex items-center gap-2">
-          <Link className="rounded border border-zinc-300 px-3 py-2 text-sm" href="/dashboard">
-            Dashboard
-          </Link>
+          <OwnerWorkspaceNav current="offers" />
           <SignOutButton />
         </div>
       </div>
 
+      {offerStatusFilter || bookingStatusFilters.length > 0 ? (
+        <div className="mt-4 flex items-center justify-between rounded border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
+          <p className="text-zinc-700">
+            Active filters:
+            {offerStatusFilter ? ` offer=${offerStatusFilter}` : ""}
+            {bookingStatusFilters.length > 0 ? ` booking=${bookingStatusFilters.join(",")}` : ""}
+          </p>
+          <Link className="rounded border border-zinc-300 px-2 py-1 text-xs" href="/offers">
+            Clear filters
+          </Link>
+        </div>
+      ) : null}
+
       {error ? <p className="mt-4 text-sm text-red-700">Failed to load offers: {error.message}</p> : null}
 
-      {!error && offers.length === 0 ? (
+      {!error && filteredOffers.length === 0 ? (
         <p className="mt-4 text-sm text-zinc-600">No offers yet.</p>
       ) : null}
 
-      {offers.length > 0 ? (
+      {filteredOffers.length > 0 ? (
         <div className="mt-6 overflow-x-auto rounded border border-zinc-200">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-zinc-50 text-zinc-700">
@@ -121,7 +161,7 @@ export default async function OwnerOffersPage() {
               </tr>
             </thead>
             <tbody>
-              {offers.map((offer) => {
+              {filteredOffers.map((offer) => {
                 const booking = bookingByOffer.get(offer.id);
                 const listing = listingById.get(offer.listing_id);
                 return (

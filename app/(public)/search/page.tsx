@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
+import DestinationInput from "@/components/forms/DestinationInput";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -144,15 +145,9 @@ export default async function SearchPage({
       <p className="mt-2 text-sm text-zinc-600">Clean, practical search for destination, dates, and value.</p>
 
       <form className="mt-5 grid gap-2 rounded border border-zinc-200 bg-white p-3 md:grid-cols-12 md:items-end" method="get">
-        <label className="block text-xs font-medium text-zinc-700 md:col-span-4">
-          Destination or resort
-          <input
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-            defaultValue={q}
-            name="q"
-            placeholder="Orlando, Maui, Marriott..."
-          />
-        </label>
+        <div className="md:col-span-4">
+          <DestinationInput defaultValue={q} />
+        </div>
         <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
           Check-in
           <input className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm" defaultValue={checkIn} name="checkIn" type="date" />

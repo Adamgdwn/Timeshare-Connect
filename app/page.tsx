@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
+import DestinationInput from "@/components/forms/DestinationInput";
 
 export default async function HomePage() {
   const supabase = await createServerClient();
@@ -14,52 +15,25 @@ export default async function HomePage() {
       <p className="mt-2 text-sm text-zinc-600">Search timeshare stays by destination, dates, and value.</p>
 
       <section className="mt-6 rounded border border-zinc-200 bg-white p-4">
-        <h2 className="text-base font-semibold">Portal Entry</h2>
-        <p className="mt-1 text-sm text-zinc-600">Choose your role to jump into the right workflow.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded border border-zinc-200 p-3">
-            <p className="text-sm font-medium">Traveler</p>
-            <p className="mt-1 text-xs text-zinc-600">Search, request, and track trips.</p>
-            <div className="mt-3">
-              <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm" href={user ? "/trips" : "/login?next=/trips"}>
-                {user ? "Open trips" : "Traveler login"}
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded border border-zinc-200 p-3">
-            <p className="text-sm font-medium">Owner</p>
-            <p className="mt-1 text-xs text-zinc-600">Manage inventory, listings, and offers.</p>
-            <div className="mt-3">
-              <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm" href={user ? "/dashboard" : "/login?next=/dashboard"}>
-                {user ? "Open dashboard" : "Owner login"}
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded border border-zinc-200 p-3">
-            <p className="text-sm font-medium">Admin</p>
-            <p className="mt-1 text-xs text-zinc-600">Review bookings, users, and platform health.</p>
-            <div className="mt-3">
-              <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm" href={user ? "/admin" : "/login?next=/admin"}>
-                {user ? "Open admin" : "Admin login"}
-              </Link>
-            </div>
-          </div>
+        <h2 className="text-base font-semibold">Account</h2>
+        <p className="mt-1 text-sm text-zinc-600">Log in once, then choose your view from the login dropdown.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {!user ? (
+            <Link className="rounded border border-zinc-300 px-4 py-2 text-sm" href="/login">
+              Log in / Sign up
+            </Link>
+          ) : (
+            <SignOutButton />
+          )}
         </div>
       </section>
 
       <section className="mt-6 rounded border border-zinc-200 bg-white p-4">
         <h2 className="text-base font-semibold">Search Stays</h2>
         <form action="/search" className="mt-4 grid gap-3 md:grid-cols-12 md:items-end" method="get">
-          <label className="block text-xs font-medium text-zinc-700 md:col-span-4">
-            Destination or resort
-            <input
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-              name="q"
-              placeholder="Orlando, Maui, Marriott..."
-            />
-          </label>
+          <div className="md:col-span-4">
+            <DestinationInput />
+          </div>
           <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
             Check-in
             <input className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm" name="checkIn" type="date" />
@@ -83,13 +57,6 @@ export default async function HomePage() {
           <Link className="rounded border border-zinc-300 px-4 py-2 text-sm" href="/trips">
             My Trips
           </Link>
-          {!user ? (
-            <Link className="rounded border border-zinc-300 px-4 py-2 text-sm" href="/login">
-              Log in / Sign up
-            </Link>
-          ) : (
-            <SignOutButton />
-          )}
         </div>
       </section>
     </main>

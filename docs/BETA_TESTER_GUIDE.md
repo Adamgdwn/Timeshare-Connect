@@ -13,6 +13,10 @@ Ask the app owner for:
 - 1 owner login
 - Optional admin login (for advanced testing)
 
+For larger cohorts, see:
+- `docs/BETA_ACCOUNTS.md`
+- `supabase/beta_bulk_seed.sql`
+
 ## What To Test (Traveler)
 
 1. Log in as traveler.
@@ -58,4 +62,3 @@ Example idea report:
 - Payments are still partially placeholder.
 - Availability is owner-entered (not live resort integrations).
 - Verification is semi-manual.
-

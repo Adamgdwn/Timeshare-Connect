@@ -8,6 +8,7 @@ If you are setting up or deploying this project, read these first:
 - `docs/SUPABASE_RUN_ORDER.md` - exact SQL migration sequence for existing databases.
 - `docs/RELEASE_CHECKLIST.md` - pre-deploy and post-deploy checks.
 - `docs/CHANGELOG_DEV.md` - plain-language history of implemented changes.
+- `docs/PARKING_LOT.md` - deferred items and future architecture decisions.
 - `docs/BETA_TESTER_GUIDE.md` - script for testers and how to submit feedback.
 - `docs/PUBLISH_AND_SHARE_GUIDE.md` - exact steps to publish and share beta builds.
 

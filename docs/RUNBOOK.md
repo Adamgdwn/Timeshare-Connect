@@ -40,13 +40,18 @@ Notes:
 
 Run in Supabase SQL Editor, in this order:
 
-1. `supabase/user_moderation_and_reviews.sql`
-2. `supabase/resort_reviews_migration.sql`
-3. `supabase/booking_cancel_fields.sql`
-4. `supabase/role_both_migration.sql`
-5. `supabase/owner_inventory_migration.sql`
-6. `supabase/listing_inventory_migration.sql`
-7. `supabase/rls.sql`
+1. `supabase/health_check.sql` (baseline)
+2. `supabase/owner_inventory_migration.sql`
+3. `supabase/listing_inventory_migration.sql`
+4. `supabase/booking_cancel_fields.sql`
+5. `supabase/user_moderation_and_reviews.sql`
+6. `supabase/resort_reviews_migration.sql`
+7. `supabase/resort_portals_migration.sql`
+8. `supabase/role_both_migration.sql`
+9. `supabase/rls.sql`
+10. `supabase/health_check.sql` (post-check)
+
+For a focused SQL order doc, see `docs/SUPABASE_RUN_ORDER.md`.
 
 If starting from scratch instead:
 1. `supabase/schema.sql`

@@ -2,6 +2,30 @@
 
 This file tracks major development changes in plain language.
 
+## 2026-02-21
+
+### Resort Portal Foundation
+- Added standardized resort portal support and listing linkage:
+  - `resort_portals` table + seed data migration
+  - listing-level `resort_portal_id`
+- Updated owner listing creation to select a resort portal and auto-fill booking base URL.
+- Updated traveler listing details to use portal-aware booking link fallback and show portal context.
+
+### Hotel Price Auto Lookup
+- Added API route for hotel pricing lookup:
+  - `app/api/hotel-pricing/route.ts`
+  - integrates with `SERPAPI_API_KEY` and returns estimated nightly/total USD pricing.
+- Added traveler-side live price estimate helper on:
+  - home search form
+  - search results filter form
+- Added owner-side automatic estimate for "Normal hotel price" after destination + dates are set, with manual override.
+
+### SQL and Ops Hygiene
+- Added `supabase/health_check.sql` for pre/post migration verification (tables, columns, RLS, policies, triggers, portal seed).
+- Added `docs/SUPABASE_RUN_ORDER.md` with a clear non-destructive SQL run sequence.
+- Updated `docs/RUNBOOK.md` SQL sequence to align with current schema.
+- Removed redundant `supabase/rls_traveler_payments.sql`; consolidated booking update policy behavior into `supabase/rls.sql`.
+
 ## 2026-02-19
 
 ### Platform and Auth

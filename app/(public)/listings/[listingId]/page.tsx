@@ -21,7 +21,7 @@ export default async function ListingDetailsPage({
   const { data: listing, error } = await supabase
     .from("listings")
     .select(
-      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,is_active"
+      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,is_active,resort_portals(id,resort_name,brand,booking_base_url,requires_login,supports_deeplink,notes)"
     )
     .eq("id", listingId)
     .maybeSingle();
@@ -29,6 +29,12 @@ export default async function ListingDetailsPage({
   if (error || !listing || !listing.is_active) {
     notFound();
   }
+
+  const resortPortal =
+    !listing.resort_portals || Array.isArray(listing.resort_portals)
+      ? null
+      : listing.resort_portals;
+  const bookingLink = listing.resort_booking_url || resortPortal?.booking_base_url || null;
 
   const { data: ownerReviews } = await supabase
     .from("user_reviews")
@@ -97,10 +103,10 @@ export default async function ListingDetailsPage({
           {listing.description ? <p className="text-sm text-zinc-700">{listing.description}</p> : null}
 
           <div className="flex flex-wrap gap-2">
-            {listing.resort_booking_url ? (
+            {bookingLink ? (
               <a
                 className="rounded border border-zinc-300 px-3 py-2 text-sm"
-                href={listing.resort_booking_url}
+                href={bookingLink}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -112,6 +118,14 @@ export default async function ListingDetailsPage({
               listingTitle={`${listing.resort_name} (${listing.city})`}
             />
           </div>
+
+          {resortPortal ? (
+            <p className="text-xs text-zinc-600">
+              Portal: {resortPortal.resort_name}
+              {resortPortal.brand ? ` (${resortPortal.brand})` : ""}.{" "}
+              {resortPortal.requires_login ? "Login is usually required to complete booking checks." : "Public booking access is available."}
+            </p>
+          ) : null}
         </section>
 
         <div>

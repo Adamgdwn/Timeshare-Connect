@@ -5,6 +5,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 If you are setting up or deploying this project, read these first:
 
 - `docs/RUNBOOK.md` - local setup, env vars, SQL run order, troubleshooting.
+- `docs/SUPABASE_RUN_ORDER.md` - exact SQL migration sequence for existing databases.
 - `docs/RELEASE_CHECKLIST.md` - pre-deploy and post-deploy checks.
 - `docs/CHANGELOG_DEV.md` - plain-language history of implemented changes.
 - `docs/BETA_TESTER_GUIDE.md` - script for testers and how to submit feedback.

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import DestinationInput from "@/components/forms/DestinationInput";
+import TravelerHotelPriceLookup from "@/features/pricing/components/TravelerHotelPriceLookup";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -146,21 +147,34 @@ export default async function SearchPage({
 
       <form className="mt-5 grid gap-2 rounded border border-zinc-200 bg-white p-3 md:grid-cols-12 md:items-end" method="get">
         <div className="md:col-span-4">
-          <DestinationInput defaultValue={q} />
+          <DestinationInput defaultValue={q} inputId="search-destination" />
         </div>
         <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
           Check-in
-          <input className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm" defaultValue={checkIn} name="checkIn" type="date" />
+          <input
+            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
+            defaultValue={checkIn}
+            id="search-check-in"
+            name="checkIn"
+            type="date"
+          />
         </label>
         <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
           Check-out
-          <input className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm" defaultValue={checkOut} name="checkOut" type="date" />
+          <input
+            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
+            defaultValue={checkOut}
+            id="search-check-out"
+            name="checkOut"
+            type="date"
+          />
         </label>
         <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
           Guests
           <input
             className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
             defaultValue={guests}
+            id="search-guests"
             min={1}
             name="guests"
             placeholder="2"
@@ -176,6 +190,12 @@ export default async function SearchPage({
           </Link>
         </div>
       </form>
+      <TravelerHotelPriceLookup
+        checkInInputId="search-check-in"
+        checkOutInputId="search-check-out"
+        destinationInputId="search-destination"
+        guestsInputId="search-guests"
+      />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[280px_1fr]">
         <aside className="h-fit rounded border border-zinc-200 p-4">

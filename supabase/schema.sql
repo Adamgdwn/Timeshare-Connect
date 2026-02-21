@@ -9,6 +9,7 @@ drop table if exists public.bookings cascade;
 drop table if exists public.offers cascade;
 drop table if exists public.listing_views cascade;
 drop table if exists public.listings cascade;
+drop table if exists public.resort_portals cascade;
 drop table if exists public.owner_inventory cascade;
 drop table if exists public.profiles cascade;
 
@@ -59,10 +60,27 @@ create trigger owner_inventory_set_updated_at
 before update on public.owner_inventory
 for each row execute function public.set_updated_at();
 
+create table public.resort_portals (
+  id uuid primary key default gen_random_uuid(),
+  resort_name text not null unique,
+  brand text,
+  booking_base_url text not null,
+  requires_login boolean not null default true,
+  supports_deeplink boolean not null default false,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger resort_portals_set_updated_at
+before update on public.resort_portals
+for each row execute function public.set_updated_at();
+
 create table public.listings (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
   inventory_id uuid references public.owner_inventory(id) on delete set null,
+  resort_portal_id uuid references public.resort_portals(id) on delete set null,
   ownership_type text not null default 'fixed_week' check (ownership_type in ('fixed_week', 'floating_week', 'points')),
   season text,
   home_week text,
@@ -170,6 +188,7 @@ create table public.resort_reviews (
 
 create index listings_owner_id_idx on public.listings(owner_id);
 create index owner_inventory_owner_id_idx on public.owner_inventory(owner_id);
+create index listings_resort_portal_id_idx on public.listings(resort_portal_id);
 create index listings_city_idx on public.listings(city);
 create index listings_dates_idx on public.listings(check_in_date, check_out_date);
 create index listings_active_idx on public.listings(is_active);

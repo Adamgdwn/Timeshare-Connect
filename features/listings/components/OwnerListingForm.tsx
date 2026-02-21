@@ -8,6 +8,7 @@ import CityCountryLookup from "@/components/forms/CityCountryLookup";
 
 type ListingFormState = {
   selectedInventoryId: string;
+  selectedResortPortalId: string;
   ownershipType: "fixed_week" | "floating_week" | "points";
   seasonOption: string;
   season: string;
@@ -30,6 +31,7 @@ type ListingFormState = {
 
 const initialState: ListingFormState = {
   selectedInventoryId: "",
+  selectedResortPortalId: "",
   ownershipType: "fixed_week",
   seasonOption: "",
   season: "",
@@ -65,6 +67,15 @@ type OwnerInventoryTemplate = {
   resort_booking_url: string | null;
 };
 
+type ResortPortal = {
+  id: string;
+  resort_name: string;
+  brand: string | null;
+  booking_base_url: string;
+  requires_login: boolean;
+  supports_deeplink: boolean;
+};
+
 const UNIT_TYPE_OPTIONS = ["studio", "1 bedroom", "2 bedroom", "3 bedroom", "lockoff"];
 const SEASON_OPTIONS = ["Platinum / Prime", "High season", "Shoulder season", "Low season", "Holiday season"];
 
@@ -87,38 +98,120 @@ function resolveHomeWeekOption(value: string) {
   return match ? value : value ? "custom" : "";
 }
 
+function findPortalIdByResortName(portals: ResortPortal[], resortName: string) {
+  const normalized = resortName.trim().toLowerCase();
+  if (!normalized) return "";
+
+  const exact = portals.find((portal) => portal.resort_name.trim().toLowerCase() === normalized);
+  if (exact) return exact.id;
+
+  const partial = portals.find((portal) => normalized.includes(portal.resort_name.trim().toLowerCase()));
+  return partial?.id ?? "";
+}
+
 export default function OwnerListingForm() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [state, setState] = useState<ListingFormState>(initialState);
   const [inventoryTemplates, setInventoryTemplates] = useState<OwnerInventoryTemplate[]>([]);
+  const [resortPortals, setResortPortals] = useState<ResortPortal[]>([]);
+  const [autoNormalPrice, setAutoNormalPrice] = useState<number | null>(null);
+  const [autoNormalPriceStatus, setAutoNormalPriceStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [normalPriceEditedManually, setNormalPriceEditedManually] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadTemplates() {
-      const { data, error } = await supabase
-        .from("owner_inventory")
-        .select(
-          "id,label,ownership_type,season,home_week,points_power,inventory_notes,resort_name,city,country,unit_type,resort_booking_url"
-        )
-        .order("created_at", { ascending: false });
+    async function loadTemplatesAndPortals() {
+      const [templateResult, portalResult] = await Promise.all([
+        supabase
+          .from("owner_inventory")
+          .select(
+            "id,label,ownership_type,season,home_week,points_power,inventory_notes,resort_name,city,country,unit_type,resort_booking_url"
+          )
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("resort_portals")
+          .select("id,resort_name,brand,booking_base_url,requires_login,supports_deeplink")
+          .order("resort_name", { ascending: true }),
+      ]);
 
-      if (!isMounted || error) {
+      if (!isMounted) {
         return;
       }
 
-      setInventoryTemplates((data ?? []) as OwnerInventoryTemplate[]);
+      if (!templateResult.error) {
+        setInventoryTemplates((templateResult.data ?? []) as OwnerInventoryTemplate[]);
+      }
+
+      if (!portalResult.error) {
+        setResortPortals((portalResult.data ?? []) as ResortPortal[]);
+      }
     }
 
-    loadTemplates();
+    loadTemplatesAndPortals();
 
     return () => {
       isMounted = false;
     };
   }, [supabase]);
+
+  useEffect(() => {
+    if (!state.city || !state.checkInDate || !state.checkOutDate || state.checkOutDate <= state.checkInDate) {
+      setAutoNormalPriceStatus("idle");
+      setAutoNormalPrice(null);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setAutoNormalPriceStatus("loading");
+      try {
+        const response = await fetch("/api/hotel-pricing", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            destination: state.city,
+            resortName: state.resortName,
+            country: state.country,
+            checkIn: state.checkInDate,
+            checkOut: state.checkOutDate,
+            adults: 2,
+          }),
+        });
+
+        const payload = (await response.json()) as {
+          nightlyUsd?: number;
+          totalUsd?: number;
+          error?: string;
+        };
+
+        if (!response.ok || !payload.totalUsd) {
+          throw new Error(payload.error || "No normal price found.");
+        }
+
+        setAutoNormalPrice(payload.totalUsd);
+        setAutoNormalPriceStatus("ready");
+
+        if (!normalPriceEditedManually || !state.normalPrice) {
+          setState((s) => ({ ...s, normalPrice: String(payload.totalUsd) }));
+        }
+      } catch {
+        setAutoNormalPriceStatus("error");
+      }
+    }, 650);
+
+    return () => clearTimeout(timeout);
+  }, [
+    normalPriceEditedManually,
+    state.checkInDate,
+    state.checkOutDate,
+    state.city,
+    state.country,
+    state.normalPrice,
+    state.resortName,
+  ]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -168,6 +261,7 @@ export default function OwnerListingForm() {
       const { error: insertError } = await supabase.from("listings").insert({
         owner_id: user.id,
         inventory_id: state.selectedInventoryId || null,
+        resort_portal_id: state.selectedResortPortalId || null,
         ownership_type: state.ownershipType,
         season: state.season || null,
         home_week: state.homeWeek || null,
@@ -214,6 +308,7 @@ export default function OwnerListingForm() {
             const template = inventoryTemplates.find((item) => item.id === templateId);
 
             if (!template) {
+              setNormalPriceEditedManually(false);
               setState((s) => ({ ...s, selectedInventoryId: "" }));
               return;
             }
@@ -225,6 +320,7 @@ export default function OwnerListingForm() {
             setState((s) => ({
               ...s,
               selectedInventoryId: template.id,
+              selectedResortPortalId: findPortalIdByResortName(resortPortals, template.resort_name),
               ownershipType: template.ownership_type,
               seasonOption: resolveSeasonOption(season),
               season,
@@ -239,6 +335,7 @@ export default function OwnerListingForm() {
               unitType,
               resortBookingUrl: template.resort_booking_url || "",
             }));
+            setNormalPriceEditedManually(false);
           }}
         >
           <option value="">No template (manual entry)</option>
@@ -377,6 +474,35 @@ export default function OwnerListingForm() {
         />
       </label>
 
+      <label className="block text-sm">
+        Resort booking portal (recommended)
+        <select
+          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+          value={state.selectedResortPortalId}
+          onChange={(e) => {
+            const selectedPortalId = e.target.value;
+            const selectedPortal = resortPortals.find((portal) => portal.id === selectedPortalId);
+
+            setState((s) => ({
+              ...s,
+              selectedResortPortalId: selectedPortalId,
+              resortBookingUrl: selectedPortal?.booking_base_url ?? s.resortBookingUrl,
+            }));
+          }}
+        >
+          <option value="">Custom URL only (no portal selected)</option>
+          {resortPortals.map((portal) => (
+            <option key={portal.id} value={portal.id}>
+              {portal.resort_name}
+              {portal.brand ? ` (${portal.brand})` : ""}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-zinc-600">
+          Pick a known portal for cleaner traveler handoff. You can still override the booking URL below.
+        </p>
+      </label>
+
       <CityCountryLookup
         city={state.city}
         country={state.country}
@@ -463,8 +589,32 @@ export default function OwnerListingForm() {
             step="0.01"
             required
             value={state.normalPrice}
-            onChange={(e) => setState((s) => ({ ...s, normalPrice: e.target.value }))}
+            onChange={(e) => {
+              setNormalPriceEditedManually(true);
+              setState((s) => ({ ...s, normalPrice: e.target.value }));
+            }}
           />
+          {autoNormalPriceStatus === "loading" ? (
+            <p className="mt-1 text-xs text-zinc-600">Auto-checking normal hotel pricing...</p>
+          ) : null}
+          {autoNormalPriceStatus === "ready" && autoNormalPrice ? (
+            <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
+              <span>Auto estimate: ${autoNormalPrice.toLocaleString("en-US")} total stay.</span>
+              <button
+                className="rounded border border-zinc-300 px-2 py-0.5 text-xs"
+                onClick={() => {
+                  setNormalPriceEditedManually(false);
+                  setState((s) => ({ ...s, normalPrice: String(autoNormalPrice) }));
+                }}
+                type="button"
+              >
+                Use estimate
+              </button>
+            </div>
+          ) : null}
+          {autoNormalPriceStatus === "error" ? (
+            <p className="mt-1 text-xs text-amber-700">Could not auto-fetch normal hotel price. Enter it manually.</p>
+          ) : null}
         </label>
       </div>
 

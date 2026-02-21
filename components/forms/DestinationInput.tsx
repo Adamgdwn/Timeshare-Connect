@@ -1,6 +1,7 @@
 type DestinationInputProps = {
   defaultValue?: string;
   name?: string;
+  inputId?: string;
   placeholder?: string;
   required?: boolean;
   className?: string;
@@ -25,6 +26,7 @@ const DESTINATION_OPTIONS = [
 export default function DestinationInput({
   defaultValue,
   name = "q",
+  inputId,
   placeholder = "Orlando, Maui, Marriott...",
   required = false,
   className = "mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm",
@@ -36,6 +38,7 @@ export default function DestinationInput({
     <label className={labelClassName}>
       Destination or resort
       <input
+        id={inputId}
         className={className}
         defaultValue={defaultValue}
         list={listId}
@@ -51,4 +54,3 @@ export default function DestinationInput({
     </label>
   );
 }
-

@@ -19,6 +19,7 @@ $$;
 
 alter table public.profiles enable row level security;
 alter table public.owner_inventory enable row level security;
+alter table public.resort_portals enable row level security;
 alter table public.listings enable row level security;
 alter table public.listing_views enable row level security;
 alter table public.offers enable row level security;
@@ -72,6 +73,32 @@ using (
   or owner_id = auth.uid()
   or public.current_user_role() = 'admin'
 );
+
+drop policy if exists resort_portals_select_public on public.resort_portals;
+create policy resort_portals_select_public
+on public.resort_portals
+for select
+to public
+using (true);
+
+drop policy if exists resort_portals_insert_admin_only on public.resort_portals;
+create policy resort_portals_insert_admin_only
+on public.resort_portals
+for insert
+with check (public.current_user_role() = 'admin');
+
+drop policy if exists resort_portals_update_admin_only on public.resort_portals;
+create policy resort_portals_update_admin_only
+on public.resort_portals
+for update
+using (public.current_user_role() = 'admin')
+with check (public.current_user_role() = 'admin');
+
+drop policy if exists resort_portals_delete_admin_only on public.resort_portals;
+create policy resort_portals_delete_admin_only
+on public.resort_portals
+for delete
+using (public.current_user_role() = 'admin');
 
 drop policy if exists owner_inventory_select_owner_or_admin on public.owner_inventory;
 create policy owner_inventory_select_owner_or_admin
@@ -279,15 +306,25 @@ with check (
 );
 
 drop policy if exists bookings_update_owner_or_admin on public.bookings;
-create policy bookings_update_owner_or_admin
+drop policy if exists bookings_update_owner_traveler_or_admin on public.bookings;
+create policy bookings_update_owner_traveler_or_admin
 on public.bookings
 for update
 using (
   (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
+  or (traveler_id = auth.uid() and public.current_user_role() in ('traveler', 'both'))
   or public.current_user_role() = 'admin'
 )
 with check (
-  (owner_id = auth.uid() and public.current_user_role() in ('owner', 'both'))
+  (
+    owner_id = auth.uid()
+    and public.current_user_role() in ('owner', 'both')
+  )
+  or (
+    traveler_id = auth.uid()
+    and public.current_user_role() in ('traveler', 'both')
+    and status in ('first_payment_paid', 'fully_paid', 'awaiting_first_payment', 'verified_awaiting_final_payment', 'canceled')
+  )
   or public.current_user_role() = 'admin'
 );
 

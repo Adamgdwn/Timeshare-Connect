@@ -65,7 +65,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (checkOut <= checkIn) {
+    const safeCheckIn = checkIn as string;
+    const safeCheckOut = checkOut as string;
+
+    if (safeCheckOut <= safeCheckIn) {
       return NextResponse.json(
         { error: "checkOut must be after checkIn." },
         { status: 400 }
@@ -83,8 +86,8 @@ export async function POST(request: Request) {
     const query = new URLSearchParams({
       engine: "google_hotels",
       q: payload.country ? `${destination}, ${payload.country}` : destination,
-      check_in_date: checkIn,
-      check_out_date: checkOut,
+      check_in_date: safeCheckIn,
+      check_out_date: safeCheckOut,
       adults: String(adults),
       currency: "USD",
       gl: "us",
@@ -124,8 +127,8 @@ export async function POST(request: Request) {
       Math.max(
         1,
         Math.round(
-          (new Date(`${checkOut}T00:00:00`).getTime() -
-            new Date(`${checkIn}T00:00:00`).getTime()) /
+          (new Date(`${safeCheckOut}T00:00:00`).getTime() -
+            new Date(`${safeCheckIn}T00:00:00`).getTime()) /
             (1000 * 60 * 60 * 24)
         )
       ) || 1;
@@ -143,4 +146,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

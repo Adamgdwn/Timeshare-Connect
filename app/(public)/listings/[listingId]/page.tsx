@@ -3,6 +3,16 @@ import { createServerClient } from "@/lib/supabase/server";
 import ShareListingButton from "@/features/listings/components/ShareListingButton";
 import RequestWeekForm from "@/features/offers/components/RequestWeekForm";
 
+type ResortPortalSummary = {
+  id: string;
+  resort_name: string;
+  brand: string | null;
+  booking_base_url: string;
+  requires_login: boolean;
+  supports_deeplink: boolean;
+  notes: string | null;
+};
+
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -30,10 +40,10 @@ export default async function ListingDetailsPage({
     notFound();
   }
 
-  const resortPortal =
-    !listing.resort_portals || Array.isArray(listing.resort_portals)
-      ? null
-      : listing.resort_portals;
+  const rawResortPortal = listing.resort_portals as unknown;
+  const resortPortal = (
+    Array.isArray(rawResortPortal) ? rawResortPortal[0] ?? null : rawResortPortal ?? null
+  ) as ResortPortalSummary | null;
   const bookingLink = listing.resort_booking_url || resortPortal?.booking_base_url || null;
 
   const { data: ownerReviews } = await supabase

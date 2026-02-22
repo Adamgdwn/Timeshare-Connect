@@ -20,6 +20,10 @@ This file tracks major development changes in plain language.
   - search results filter form
 - Added owner-side automatic estimate for "Normal hotel price" after destination + dates are set, with manual override.
 
+### Search UX Improvements
+- Expanded destination/resort suggestion list substantially (US, Canada, Mexico/Caribbean, Europe, APAC, major timeshare brands).
+- Upgraded destination suggestions to merge live active listing values (`resort_name`, `city`, `city, country`) with static fallback suggestions.
+
 ### SQL and Ops Hygiene
 - Added `supabase/health_check.sql` for pre/post migration verification (tables, columns, RLS, policies, triggers, portal seed).
 - Added `docs/SUPABASE_RUN_ORDER.md` with a clear non-destructive SQL run sequence.

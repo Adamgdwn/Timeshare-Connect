@@ -3,12 +3,14 @@ import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
 import DestinationInput from "@/components/forms/DestinationInput";
 import TravelerHotelPriceLookup from "@/features/pricing/components/TravelerHotelPriceLookup";
+import { getDestinationSuggestions } from "@/lib/listings/getDestinationSuggestions";
 
 export default async function HomePage() {
   const supabase = await createServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const destinationSuggestions = await getDestinationSuggestions();
 
   return (
     <main className="mx-auto max-w-7xl p-6 md:p-8">
@@ -33,7 +35,7 @@ export default async function HomePage() {
         <h2 className="text-base font-semibold">Search Stays</h2>
         <form action="/search" className="mt-4 grid gap-3 md:grid-cols-12 md:items-end" method="get">
           <div className="md:col-span-4">
-            <DestinationInput inputId="home-destination" />
+            <DestinationInput inputId="home-destination" options={destinationSuggestions} />
           </div>
           <label className="block text-xs font-medium text-zinc-700 md:col-span-2">
             Check-in

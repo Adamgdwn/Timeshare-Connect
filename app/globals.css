@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f1ea;
+  --foreground: #101615;
+  --tc-surface: #fbfaf6;
+  --tc-surface-2: #f7f4ee;
+  --tc-border: #d8d1c4;
+  --tc-ink-soft: #5f6966;
+  --tc-accent: #184944;
+  --tc-accent-2: #b58a4a;
+  --tc-accent-2-soft: #e9dcc5;
+  --tc-shadow: 0 10px 30px rgba(16, 22, 21, 0.06);
 }
 
 @theme inline {
@@ -12,15 +20,100 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(181, 138, 74, 0.08), transparent 42%),
+    radial-gradient(circle at 100% 20%, rgba(24, 73, 68, 0.06), transparent 40%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 
-body {
-  background: var(--background);
+::selection {
+  background: rgba(24, 73, 68, 0.18);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background: var(--tc-surface);
+  border-color: var(--tc-border);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--tc-accent) 45%, white);
+  box-shadow:
+    0 0 0 3px rgba(24, 73, 68, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.tc-page {
+  position: relative;
+}
+
+.tc-page::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: min(100%, 320px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--tc-accent), var(--tc-accent-2), transparent);
+  opacity: 0.65;
+}
+
+.tc-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.42));
+  background-color: var(--tc-surface);
+  border: 1px solid var(--tc-border);
+  box-shadow: var(--tc-shadow);
+}
+
+.tc-surface-soft {
+  background: var(--tc-surface-2);
+  border: 1px solid var(--tc-border);
+}
+
+.tc-title {
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, var(--foreground) 92%, var(--tc-accent) 8%);
+}
+
+.tc-muted {
+  color: var(--tc-ink-soft);
+}
+
+.tc-btn-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tc-accent) 92%, white), var(--tc-accent));
+  color: #f8faf8;
+  border: 1px solid color-mix(in srgb, var(--tc-accent) 85%, black);
+  box-shadow: 0 6px 16px rgba(24, 73, 68, 0.18);
+}
+
+.tc-btn-primary:hover {
+  filter: brightness(1.02);
+}
+
+.tc-btn-secondary {
+  background: var(--tc-surface);
+  border: 1px solid var(--tc-border);
+  color: var(--foreground);
+}
+
+.tc-btn-secondary:hover {
+  background: #ffffff;
+}
+
+.tc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--tc-accent-2) 35%, var(--tc-border));
+  background: color-mix(in srgb, var(--tc-accent-2-soft) 55%, white);
+  color: color-mix(in srgb, var(--foreground) 75%, var(--tc-accent-2) 25%);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }

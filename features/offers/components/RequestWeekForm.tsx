@@ -63,8 +63,8 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
   }
 
   return (
-    <form className="space-y-3 rounded border border-zinc-200 p-4" onSubmit={onSubmit}>
-      <h2 className="text-base font-semibold">Request this week</h2>
+    <form className="tc-surface space-y-3 rounded-xl p-4" onSubmit={onSubmit}>
+      <h2 className="tc-title text-base font-semibold">Request this week</h2>
       <label className="block text-sm">
         Guest count
         <input
@@ -87,7 +87,7 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
         />
       </label>
       <button
-        className="w-full rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+        className="tc-btn-primary w-full rounded px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >

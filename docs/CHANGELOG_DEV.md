@@ -24,6 +24,15 @@ This file tracks major development changes in plain language.
 - Expanded destination/resort suggestion list substantially (US, Canada, Mexico/Caribbean, Europe, APAC, major timeshare brands).
 - Upgraded destination suggestions to merge live active listing values (`resort_name`, `city`, `city, country`) with static fallback suggestions.
 
+### Visual Design Refresh (Public/Beta-facing)
+- Added a restrained premium visual theme (warm neutral surfaces, deep green primary accents, subtle gold highlights).
+- Styled global navigation and feedback widget to match the updated look.
+- Refreshed traveler-facing public pages:
+  - home search entry
+  - search results
+  - listing details
+  - request form
+
 ### SQL and Ops Hygiene
 - Added `supabase/health_check.sql` for pre/post migration verification (tables, columns, RLS, policies, triggers, portal seed).
 - Added `docs/SUPABASE_RUN_ORDER.md` with a clear non-destructive SQL run sequence.

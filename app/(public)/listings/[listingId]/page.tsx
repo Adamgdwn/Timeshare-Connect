@@ -68,15 +68,15 @@ export default async function ListingDetailsPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-8">
-      <h1 className="text-2xl font-semibold">{listing.resort_name}</h1>
-      <p className="mt-2 text-sm text-zinc-600">
+    <main className="tc-page mx-auto max-w-5xl p-8">
+      <h1 className="tc-title text-2xl font-semibold md:text-3xl">{listing.resort_name}</h1>
+      <p className="tc-muted mt-2 text-sm">
         {listing.city}
         {listing.country ? `, ${listing.country}` : ""}
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-[2fr_1fr]">
-        <section className="space-y-4 rounded border border-zinc-200 p-4">
+        <section className="tc-surface space-y-4 rounded-xl p-5">
           <div className="grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
             <p>
               <span className="font-medium">Dates:</span> {listing.check_in_date} to {listing.check_out_date}
@@ -100,12 +100,12 @@ export default async function ListingDetailsPage({
             </p>
           </div>
 
-          {listing.description ? <p className="text-sm text-zinc-700">{listing.description}</p> : null}
+          {listing.description ? <p className="text-sm text-zinc-700 leading-relaxed">{listing.description}</p> : null}
 
           <div className="flex flex-wrap gap-2">
             {bookingLink ? (
               <a
-                className="rounded border border-zinc-300 px-3 py-2 text-sm"
+                className="tc-btn-secondary rounded px-3 py-2 text-sm"
                 href={bookingLink}
                 rel="noopener noreferrer"
                 target="_blank"

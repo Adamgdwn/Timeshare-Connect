@@ -13,16 +13,19 @@ export default async function HomePage() {
   const destinationSuggestions = await getDestinationSuggestions();
 
   return (
-    <main className="mx-auto max-w-7xl p-6 md:p-8">
-      <h1 className="text-3xl font-semibold">Timeshare Connect</h1>
-      <p className="mt-2 text-sm text-zinc-600">Search timeshare stays by destination, dates, and value.</p>
+    <main className="tc-page mx-auto max-w-7xl p-6 md:p-8">
+      <div className="mb-2">
+        <span className="tc-badge">Private Beta</span>
+      </div>
+      <h1 className="tc-title text-3xl font-semibold md:text-4xl">Timeshare Connect</h1>
+      <p className="tc-muted mt-2 text-sm md:text-base">Search timeshare stays by destination, dates, and value.</p>
 
-      <section className="mt-6 rounded border border-zinc-200 bg-white p-4">
-        <h2 className="text-base font-semibold">Account</h2>
-        <p className="mt-1 text-sm text-zinc-600">Log in once, then choose your view from the login dropdown.</p>
+      <section className="tc-surface mt-6 rounded-xl p-5">
+        <h2 className="tc-title text-base font-semibold">Account</h2>
+        <p className="tc-muted mt-1 text-sm">Log in once, then choose your view from the login dropdown.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {!user ? (
-            <Link className="rounded border border-zinc-300 px-4 py-2 text-sm" href="/login">
+            <Link className="tc-btn-primary rounded px-4 py-2 text-sm" href="/login">
               Log in / Sign up
             </Link>
           ) : (
@@ -31,8 +34,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded border border-zinc-200 bg-white p-4">
-        <h2 className="text-base font-semibold">Search Stays</h2>
+      <section className="tc-surface mt-6 rounded-xl p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="tc-title text-base font-semibold">Search Stays</h2>
+          <span className="tc-muted text-xs">Traveler-first search and request flow</span>
+        </div>
         <form action="/search" className="mt-4 grid gap-3 md:grid-cols-12 md:items-end" method="get">
           <div className="md:col-span-4">
             <DestinationInput inputId="home-destination" options={destinationSuggestions} />
@@ -67,7 +73,7 @@ export default async function HomePage() {
             />
           </label>
           <div className="md:col-span-2">
-            <button className="w-full rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white" type="submit">
+            <button className="tc-btn-primary w-full rounded px-4 py-2 text-sm font-medium" type="submit">
               Search
             </button>
           </div>
@@ -79,8 +85,8 @@ export default async function HomePage() {
           guestsInputId="home-guests"
         />
 
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-200 pt-4">
-          <Link className="rounded border border-zinc-300 px-4 py-2 text-sm" href="/trips">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--tc-border)] pt-4">
+          <Link className="tc-btn-secondary rounded px-4 py-2 text-sm" href="/trips">
             My Trips
           </Link>
         </div>

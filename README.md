@@ -52,6 +52,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Next.js App Router, TypeScript, Tailwind.
 - Supabase for auth + DB, helpers in `lib/supabase/*`.
 - Search destination suggestions combine live active listing values with a broad fallback datalist.
+- Public traveler pages use a polished premium theme (warm neutral surfaces + green/gold accents) tuned for low distraction.
 - Routes:
   - `app/(public)/` – home/search
   - `app/(auth)/` – login/signup

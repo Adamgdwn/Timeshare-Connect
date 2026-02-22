@@ -143,11 +143,11 @@ export default async function SearchPage({
   });
 
   return (
-    <main className="mx-auto max-w-7xl p-6 md:p-8">
-      <h1 className="text-2xl font-semibold">Find a Timeshare Stay</h1>
-      <p className="mt-2 text-sm text-zinc-600">Clean, practical search for destination, dates, and value.</p>
+    <main className="tc-page mx-auto max-w-7xl p-6 md:p-8">
+      <h1 className="tc-title text-2xl font-semibold md:text-3xl">Find a Timeshare Stay</h1>
+      <p className="tc-muted mt-2 text-sm md:text-base">Clean, practical search for destination, dates, and value.</p>
 
-      <form className="mt-5 grid gap-2 rounded border border-zinc-200 bg-white p-3 md:grid-cols-12 md:items-end" method="get">
+      <form className="tc-surface mt-5 grid gap-2 rounded-xl p-3 md:grid-cols-12 md:items-end" method="get">
         <div className="md:col-span-4">
           <DestinationInput defaultValue={q} inputId="search-destination" options={destinationSuggestions} />
         </div>
@@ -184,10 +184,10 @@ export default async function SearchPage({
           />
         </label>
         <div className="flex gap-2 md:col-span-2">
-          <button className="w-full rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white" type="submit">
+          <button className="tc-btn-primary w-full rounded px-4 py-2 text-sm font-medium" type="submit">
             Search
           </button>
-          <Link className="rounded border border-zinc-300 px-3 py-2 text-sm" href="/search">
+          <Link className="tc-btn-secondary rounded px-3 py-2 text-sm" href="/search">
             Clear
           </Link>
         </div>
@@ -200,8 +200,8 @@ export default async function SearchPage({
       />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[280px_1fr]">
-        <aside className="h-fit rounded border border-zinc-200 p-4">
-          <h2 className="text-sm font-semibold">Filters</h2>
+        <aside className="tc-surface h-fit rounded-xl p-4">
+          <h2 className="tc-title text-sm font-semibold">Filters</h2>
           <form className="mt-3 space-y-3" method="get">
             <input defaultValue={q} name="q" type="hidden" />
             <input defaultValue={checkIn} name="checkIn" type="hidden" />
@@ -261,7 +261,7 @@ export default async function SearchPage({
               </select>
             </label>
 
-            <button className="w-full rounded bg-zinc-900 px-3 py-2 text-sm text-white" type="submit">
+            <button className="tc-btn-primary w-full rounded px-3 py-2 text-sm" type="submit">
               Apply filters
             </button>
           </form>
@@ -275,10 +275,10 @@ export default async function SearchPage({
             {guests ? <p className="text-xs text-zinc-600">For {guests} guest{guests === "1" ? "" : "s"}</p> : null}
           </div>
 
-          {error ? <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">Failed to load listings: {error.message}</p> : null}
+          {error ? <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">Failed to load listings: {error.message}</p> : null}
 
           {!error && sortedListings.length === 0 ? (
-            <p className="rounded border border-zinc-200 p-4 text-sm text-zinc-600">No listings match your filters. Try removing one filter.</p>
+            <p className="tc-surface-soft rounded-xl p-4 text-sm text-zinc-600">No listings match your filters. Try removing one filter.</p>
           ) : null}
 
           {sortedListings.length > 0 ? (
@@ -286,7 +286,7 @@ export default async function SearchPage({
               {sortedListings.map((listing) => {
                 const savingsCents = listing.normal_price_cents - listing.owner_price_cents;
                 return (
-                  <article className="rounded border border-zinc-200 p-4" key={listing.id}>
+                  <article className="tc-surface rounded-xl p-4" key={listing.id}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h2 className="text-lg font-semibold">{listing.resort_name}</h2>
@@ -302,11 +302,11 @@ export default async function SearchPage({
                       <div className="min-w-[170px] text-right">
                         <p className="text-xs text-zinc-500 line-through">{formatMoney(listing.normal_price_cents)} normal</p>
                         <p className="text-2xl font-semibold">{formatMoney(listing.owner_price_cents)}</p>
-                        <p className="text-xs text-emerald-700">Save {formatMoney(Math.max(0, savingsCents))}</p>
+                        <p className="text-xs text-[color:var(--tc-accent)]">Save {formatMoney(Math.max(0, savingsCents))}</p>
                       </div>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-3">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border)] pt-3">
                       <div className="flex flex-wrap gap-3 text-xs text-zinc-700">
                         <span>
                           Owner:{" "}
@@ -317,7 +317,7 @@ export default async function SearchPage({
                           {listing.resortRating ? `${listing.resortRating.avg.toFixed(1)} / 5 (${listing.resortRating.count})` : "No ratings yet"}
                         </span>
                       </div>
-                      <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm" href={`/listings/${listing.id}`}>
+                      <Link className="tc-btn-secondary rounded px-3 py-1.5 text-sm" href={`/listings/${listing.id}`}>
                         View details
                       </Link>
                     </div>

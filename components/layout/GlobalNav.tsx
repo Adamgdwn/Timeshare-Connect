@@ -16,16 +16,16 @@ export default function GlobalNav() {
   }
 
   return (
-    <div className="border-b border-zinc-200 bg-white">
+    <div className="border-b border-[var(--tc-border)]/90 bg-[color:var(--tc-surface)]/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 py-3">
         <button
-          className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-800"
+          className="tc-btn-secondary rounded px-3 py-1.5 text-sm"
           onClick={handleBack}
           type="button"
         >
           Back
         </button>
-        <Link className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-800" href="/home">
+        <Link className="tc-btn-secondary rounded px-3 py-1.5 text-sm" href="/home">
           Home
         </Link>
       </div>

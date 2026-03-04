@@ -1,37 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f1ea;
-  --foreground: #101615;
-  --tc-surface: #fbfaf6;
-  --tc-surface-2: #f7f4ee;
-  --tc-border: #d8d1c4;
-  --tc-ink-soft: #5f6966;
-  --tc-accent: #184944;
-  --tc-accent-2: #b58a4a;
-  --tc-accent-2-soft: #e9dcc5;
-  --tc-shadow: 0 10px 30px rgba(16, 22, 21, 0.06);
+  --background: #f8f4ed;
+  --foreground: #162038;
+  --tc-surface: #fffdfa;
+  --tc-surface-2: #f9f2e7;
+  --tc-border: #dfd6c8;
+  --tc-ink-soft: #4b5870;
+  --tc-accent: #0d5d77;
+  --tc-accent-2: #d1943f;
+  --tc-accent-3: #e56a54;
+  --tc-shadow: 0 14px 34px rgba(12, 24, 45, 0.12);
+  --tc-shadow-soft: 0 8px 18px rgba(12, 24, 45, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
 body {
   background:
-    radial-gradient(circle at 10% 0%, rgba(181, 138, 74, 0.08), transparent 42%),
-    radial-gradient(circle at 100% 20%, rgba(24, 73, 68, 0.06), transparent 40%),
+    radial-gradient(circle at 8% -10%, rgba(229, 106, 84, 0.2), transparent 44%),
+    radial-gradient(circle at 100% 8%, rgba(13, 93, 119, 0.18), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(209, 148, 63, 0.16), transparent 46%),
     var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-body), "Avenir Next", "Segoe UI", sans-serif;
+  letter-spacing: -0.012em;
 }
 
 ::selection {
-  background: rgba(24, 73, 68, 0.18);
+  background: rgba(13, 93, 119, 0.2);
 }
 
 :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
@@ -57,14 +59,14 @@ body {
   content: "";
   position: absolute;
   inset: 0 auto auto 0;
-  width: min(100%, 320px);
+  width: min(100%, 420px);
   height: 2px;
-  background: linear-gradient(90deg, var(--tc-accent), var(--tc-accent-2), transparent);
+  background: linear-gradient(90deg, var(--tc-accent), var(--tc-accent-2), var(--tc-accent-3), transparent);
   opacity: 0.65;
 }
 
 .tc-surface {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.42));
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.56));
   background-color: var(--tc-surface);
   border: 1px solid var(--tc-border);
   box-shadow: var(--tc-shadow);
@@ -76,8 +78,10 @@ body {
 }
 
 .tc-title {
+  font-family: var(--font-display), "Didot", serif;
   letter-spacing: -0.03em;
-  color: color-mix(in srgb, var(--foreground) 92%, var(--tc-accent) 8%);
+  line-height: 0.98;
+  color: color-mix(in srgb, var(--foreground) 85%, var(--tc-accent) 15%);
 }
 
 .tc-muted {
@@ -85,14 +89,16 @@ body {
 }
 
 .tc-btn-primary {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tc-accent) 92%, white), var(--tc-accent));
-  color: #f8faf8;
-  border: 1px solid color-mix(in srgb, var(--tc-accent) 85%, black);
-  box-shadow: 0 6px 16px rgba(24, 73, 68, 0.18);
+  background: linear-gradient(140deg, #0f6a87, #0d5d77 45%, #0a4c61);
+  color: #f9fbff;
+  border: 1px solid color-mix(in srgb, var(--tc-accent) 80%, black);
+  box-shadow: 0 8px 20px rgba(13, 93, 119, 0.26);
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
 .tc-btn-primary:hover {
-  filter: brightness(1.02);
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .tc-btn-secondary {
@@ -109,11 +115,93 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--tc-accent-2) 35%, var(--tc-border));
-  background: color-mix(in srgb, var(--tc-accent-2-soft) 55%, white);
-  color: color-mix(in srgb, var(--foreground) 75%, var(--tc-accent-2) 25%);
+  border: 1px solid color-mix(in srgb, var(--tc-accent-2) 45%, white);
+  background: linear-gradient(140deg, #f6e4c8, #fcefd9);
+  color: color-mix(in srgb, var(--foreground) 80%, var(--tc-accent-2) 20%);
   border-radius: 999px;
-  padding: 0.2rem 0.55rem;
+  padding: 0.28rem 0.7rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.tc-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tc-border) 85%, white);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6)),
+    radial-gradient(circle at 18% 14%, rgba(13, 93, 119, 0.26), transparent 44%),
+    radial-gradient(circle at 82% 16%, rgba(229, 106, 84, 0.18), transparent 36%),
+    radial-gradient(circle at 70% 100%, rgba(209, 148, 63, 0.2), transparent 44%);
+  box-shadow: 0 24px 44px rgba(11, 26, 48, 0.16);
+}
+
+.tc-hero::before {
+  content: "";
+  position: absolute;
+  inset: -35% -40% auto auto;
+  width: 380px;
+  height: 380px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.56), transparent 64%);
+  animation: floatHalo 7s ease-in-out infinite;
+}
+
+.tc-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 -12%;
+  width: 55%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(13, 93, 119, 0.5), rgba(209, 148, 63, 0.52), transparent);
+}
+
+.tc-glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.44));
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow: var(--tc-shadow-soft);
+  backdrop-filter: blur(5px);
+}
+
+.tc-stat {
+  border: 1px solid color-mix(in srgb, var(--tc-border) 90%, white);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(249, 242, 231, 0.62));
+  box-shadow: var(--tc-shadow-soft);
+}
+
+.tc-fade-up {
+  animation: fadeUp 620ms ease both;
+}
+
+.tc-fade-up-delay {
+  animation: fadeUp 780ms ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatHalo {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-fade-up,
+  .tc-fade-up-delay,
+  .tc-hero::before {
+    animation: none;
+  }
 }

@@ -2,6 +2,28 @@
 
 This file tracks major development changes in plain language.
 
+## 2026-03-03
+
+### Luxury Travel Visual Refresh (Public Home)
+- Reworked global visual language to feel more premium and travel-forward:
+  - richer aspirational palette (coastal blue, warm gold, sunset coral)
+  - layered atmospheric gradients and elevated surfaces
+  - refreshed button states, badges, and card treatments
+- Updated typography system for stronger brand tone and hierarchy:
+  - display: `Cormorant Garamond`
+  - body: `Plus Jakarta Sans`
+  - mono: `Space Mono`
+- Redesigned `/` with:
+  - luxury hero section and supporting persuasion copy
+  - trust/value stat cards
+  - improved CTA emphasis while preserving existing search/account flows
+- Updated global navigation styling to match the new visual system.
+- Updated sign-out control styling for design consistency.
+- Verified production build after redesign (`npm run build` passed).
+
+### Vercel Project Alignment
+- Updated local Vercel link (`.vercel/project.json`) to target `timeshare-connect-h6pl` so local deploy commands align with the kept Vercel project.
+
 ## 2026-02-21
 
 ### Resort Portal Foundation

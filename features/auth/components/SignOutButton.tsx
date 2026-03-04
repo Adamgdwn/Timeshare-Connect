@@ -23,7 +23,7 @@ export default function SignOutButton() {
 
   return (
     <button
-      className="rounded border border-zinc-300 px-3 py-2 text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+      className="tc-btn-secondary rounded px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
       disabled={isLoading}
       onClick={handleSignOut}
       type="button"

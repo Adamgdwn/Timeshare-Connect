@@ -22,7 +22,7 @@ export default async function HomePage() {
               Designed to put luxury getaways within reach.
             </h1>
             <p className="tc-muted mt-4 max-w-2xl text-sm md:text-base">
-              Aspirational visuals, clear pricing cues, and effortless navigation to reduce planning friction and
+              Great selection, clear pricing cues, and effortless navigation to reduce planning friction and
               increase travel confidence.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -53,9 +53,9 @@ export default async function HomePage() {
           <p className="tc-muted mt-1 text-sm">Simplified search inputs and immediate alternatives for confidence.</p>
         </article>
         <article className="tc-stat rounded-2xl p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--tc-ink-soft)]">Experience Mood</p>
-          <p className="tc-title mt-2 text-3xl font-semibold">Aspirational</p>
-          <p className="tc-muted mt-1 text-sm">Travel-first language that keeps focus on memorable stays.</p>
+          <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--tc-ink-soft)]">Experience Goal</p>
+          <p className="tc-title mt-2 text-3xl font-semibold">Frictionless</p>
+          <p className="tc-muted mt-1 text-sm">Travel-first ease that keeps focus on memorable stays.</p>
         </article>
       </section>
 

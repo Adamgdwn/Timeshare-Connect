@@ -19,7 +19,7 @@ export default async function HomePage() {
           <div className="md:col-span-3">
             <span className="tc-badge">Private Beta</span>
             <h1 className="tc-title mt-4 text-5xl font-semibold tracking-tight md:text-7xl">
-              Designed to make luxury getaways feel inevitable.
+              Designed to put luxury getaways within reach.
             </h1>
             <p className="tc-muted mt-4 max-w-2xl text-sm md:text-base">
               Aspirational visuals, clear pricing cues, and effortless navigation to reduce planning friction and
@@ -37,16 +37,6 @@ export default async function HomePage() {
                 Explore destinations
               </Link>
             </div>
-          </div>
-          <div className="tc-glass tc-fade-up-delay rounded-2xl p-4 md:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--tc-ink-soft)]">
-              Why this works
-            </p>
-            <ul className="mt-3 space-y-2 text-sm text-[color:var(--foreground)]">
-              <li>High-contrast CTA placement drives action clarity.</li>
-              <li>Warm luxury palette reinforces comfort and exclusivity.</li>
-              <li>Social-proof style stats reduce decision anxiety.</li>
-            </ul>
           </div>
         </div>
       </section>

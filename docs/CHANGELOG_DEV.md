@@ -2,6 +2,13 @@
 
 This file tracks major development changes in plain language.
 
+## 2026-03-07
+
+### Homepage Messaging Cleanup
+- Updated the homepage hero headline to: `Designed to put luxury getaways within reach.`
+- Removed the "Why this works" explainer box from the hero to keep the page cleaner and less self-referential.
+- Verified build stability after the change (`npm run build` passed).
+
 ## 2026-03-03
 
 ### Luxury Travel Visual Refresh (Public Home)

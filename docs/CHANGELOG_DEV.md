@@ -4,6 +4,19 @@ This file tracks major development changes in plain language.
 
 ## 2026-03-07
 
+### Owner Add-Listing Wizard
+- Replaced the owner `Add Listing` long-form page with a guided 4-step wizard:
+  - `Your Resort`
+  - `Your Week/Unit`
+  - `Pricing`
+  - `Review & Publish`
+- Added a step progress indicator (`Step X of 4`) and progress bar to reduce perceived complexity.
+- Added step-level validation and `Back` / `Continue` navigation.
+- Added a final review summary card before publishing so owners can confirm listing details and pricing.
+- Preserved existing inventory-template autofill, portal selection, pricing lookup, and Supabase listing insert behavior.
+- Added an optional photo-link input in the wizard and appends it into the listing description payload.
+- Verified build stability after the owner flow refactor (`npm run build` passed).
+
 ### Homepage Messaging Cleanup
 - Updated the homepage hero headline to: `Designed to put luxury getaways within reach.`
 - Removed the "Why this works" explainer box from the hero to keep the page cleaner and less self-referential.

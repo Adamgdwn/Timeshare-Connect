@@ -9,7 +9,7 @@ export default function NewOwnerListingPage() {
         <OwnerWorkspaceNav current="new-listing" />
       </div>
       <p className="mt-3 text-sm text-zinc-600">
-        Create a new week listing for travelers. Use inventory templates to prefill resort ownership details.
+        Create a standardized listing with resort autocomplete, amenity tags, photos, pricing guidance, and a traveler-view preview.
       </p>
       <div className="mt-6">
         <OwnerListingForm />

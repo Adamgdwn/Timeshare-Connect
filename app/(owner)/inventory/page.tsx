@@ -21,7 +21,7 @@ export default async function OwnerInventoryPage() {
   const { data: items, error } = await supabase
     .from("owner_inventory")
     .select(
-      "id,label,resort_name,city,country,ownership_type,season,home_week,points_power,inventory_notes,unit_type,resort_booking_url,created_at"
+      "id,label,resort_key,resort_name,city,country,ownership_type,season,home_week,points_power,inventory_notes,unit_type,resort_booking_url,description_template,amenities,photo_urls,created_at"
     )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });

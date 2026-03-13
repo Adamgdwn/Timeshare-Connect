@@ -7,6 +7,7 @@ create table if not exists public.owner_inventory (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
   label text not null,
+  resort_key text,
   resort_name text not null,
   city text not null,
   country text,
@@ -17,9 +18,18 @@ create table if not exists public.owner_inventory (
   inventory_notes text,
   unit_type text not null,
   resort_booking_url text,
+  description_template text,
+  amenities text[] not null default '{}',
+  photo_urls text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.owner_inventory
+  add column if not exists resort_key text,
+  add column if not exists description_template text,
+  add column if not exists amenities text[] not null default '{}',
+  add column if not exists photo_urls text[] not null default '{}';
 
 alter table public.owner_inventory
   drop constraint if exists owner_inventory_ownership_type_check;
@@ -36,6 +46,7 @@ alter table public.owner_inventory
   check (points_power is null or points_power > 0);
 
 create index if not exists owner_inventory_owner_id_idx on public.owner_inventory(owner_id);
+create index if not exists owner_inventory_resort_key_idx on public.owner_inventory(resort_key);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -56,4 +67,3 @@ alter table public.listings
   add column if not exists inventory_id uuid references public.owner_inventory(id) on delete set null;
 
 commit;
-

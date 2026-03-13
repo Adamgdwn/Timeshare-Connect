@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import ShareListingButton from "@/features/listings/components/ShareListingButton";
 import RequestWeekForm from "@/features/offers/components/RequestWeekForm";
+import { formatAmenityLabel, getOwnershipCopy, getSavingsPercentage } from "@/lib/listings/metadata";
 
 type ResortPortalSummary = {
   id: string;
@@ -31,7 +32,7 @@ export default async function ListingDetailsPage({
   const { data: listing, error } = await supabase
     .from("listings")
     .select(
-      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,is_active,resort_portals(id,resort_name,brand,booking_base_url,requires_login,supports_deeplink,notes)"
+      "id,owner_id,resort_name,city,country,ownership_type,season,home_week,points_power,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,amenities,photo_urls,is_active,resort_portals(id,resort_name,brand,booking_base_url,requires_login,supports_deeplink,notes)"
     )
     .eq("id", listingId)
     .maybeSingle();
@@ -45,6 +46,10 @@ export default async function ListingDetailsPage({
     Array.isArray(rawResortPortal) ? rawResortPortal[0] ?? null : rawResortPortal ?? null
   ) as ResortPortalSummary | null;
   const bookingLink = listing.resort_booking_url || resortPortal?.booking_base_url || null;
+  const photoUrls = (listing.photo_urls ?? []) as string[];
+  const amenities = (listing.amenities ?? []) as string[];
+  const savingsPercentage = getSavingsPercentage(listing.owner_price_cents, listing.normal_price_cents);
+  const ownershipCopy = getOwnershipCopy(listing.ownership_type);
 
   const { data: ownerReviews } = await supabase
     .from("user_reviews")
@@ -85,14 +90,41 @@ export default async function ListingDetailsPage({
         {listing.country ? `, ${listing.country}` : ""}
       </p>
 
+      {photoUrls.length > 0 ? (
+        <div className="mt-6 grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
+          <img alt={listing.resort_name} className="h-72 w-full rounded-2xl object-cover" src={photoUrls[0]} />
+          {photoUrls.slice(1, 3).map((photoUrl) => (
+            <img alt={listing.resort_name} className="h-72 w-full rounded-2xl object-cover" key={photoUrl} src={photoUrl} />
+          ))}
+        </div>
+      ) : null}
+
       <div className="mt-6 grid gap-6 md:grid-cols-[2fr_1fr]">
         <section className="tc-surface space-y-4 rounded-xl p-5">
+          {amenities.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {amenities.map((amenity) => (
+                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700" key={amenity}>
+                  {formatAmenityLabel(amenity)}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
           <div className="grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
             <p>
               <span className="font-medium">Dates:</span> {listing.check_in_date} to {listing.check_out_date}
             </p>
             <p>
               <span className="font-medium">Unit type:</span> {listing.unit_type}
+            </p>
+            <p>
+              <span className="font-medium">Ownership:</span> {ownershipCopy.label}
+            </p>
+            <p>
+              <span className="font-medium">Traveler savings:</span>{" "}
+              {formatMoney(Math.max(0, listing.normal_price_cents - listing.owner_price_cents))}
+              {savingsPercentage ? ` (${savingsPercentage}% off hotel pricing)` : ""}
             </p>
             <p>
               <span className="font-medium">Owner price:</span> {formatMoney(listing.owner_price_cents)}
@@ -108,6 +140,24 @@ export default async function ListingDetailsPage({
               <span className="font-medium">Resort rating:</span>{" "}
               {resortRatingAvg ? `${resortRatingAvg.toFixed(1)} / 5 (${resortRatingCount})` : "No ratings yet"}
             </p>
+          </div>
+
+          <div className="grid gap-2 text-sm text-zinc-700 sm:grid-cols-3">
+            {listing.home_week ? (
+              <p>
+                <span className="font-medium">Home week:</span> {listing.home_week}
+              </p>
+            ) : null}
+            {listing.season ? (
+              <p>
+                <span className="font-medium">Season:</span> {listing.season}
+              </p>
+            ) : null}
+            {listing.points_power ? (
+              <p>
+                <span className="font-medium">Points:</span> {listing.points_power.toLocaleString()}
+              </p>
+            ) : null}
           </div>
 
           {listing.description ? <p className="text-sm text-zinc-700 leading-relaxed">{listing.description}</p> : null}

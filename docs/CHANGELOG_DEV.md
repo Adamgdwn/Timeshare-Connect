@@ -2,6 +2,78 @@
 
 This file tracks major development changes in plain language.
 
+## 2026-03-13
+
+### Searchable Inventory Upload Refresh
+- Expanded owner inventory + listing data model to support standardized resort search fields:
+  - `resort_key`
+  - `description_template`
+  - `amenities`
+  - `photo_urls`
+- Added a new migration for existing databases:
+  - `supabase/listing_search_enrichment_migration.sql`
+- Added a local resort catalog helper so recognized resorts can prefill:
+  - resort name
+  - city / country
+  - booking URL
+  - starter description
+  - amenity tags
+  - default photos
+
+### Owner Listing Flow Upgrade
+- Reworked the add-listing wizard to make saved inventory the primary path:
+  - saved properties now show as visual cards instead of a fallback dropdown
+  - manual resort entry remains available as a secondary path
+- Added smart resort lookup to the listing wizard and inventory-template manager.
+- Added amenity-tag selection in the owner flow so traveler filters can match listing metadata.
+- Replaced freeform photo-link text entry in listing creation with a photo gallery builder that:
+  - preloads recognized resort photos
+  - lets owners add hosted image URLs
+  - shows photo-count progress toward a stronger listing card
+- Added plain-language ownership explanations for:
+  - fixed week
+  - floating week
+  - points
+- Improved the date step with more visual, calendar-first framing:
+  - larger date inputs
+  - stay-length summary
+  - week-number confirmation
+- Added pricing guidance directly in the listing flow:
+  - comparable active listings panel
+  - suggested price action
+  - live platform fee / owner net / savings view
+- Upgraded the final review step into a stronger traveler-style preview card.
+- Added local autosave draft / restore behavior for new listings and a dashboard prompt to resume unfinished work.
+
+### Owner Inventory Library Upgrade
+- Updated inventory templates so saved resorts can include:
+  - resort key
+  - description template
+  - amenity tags
+  - photo URLs
+- Refreshed the inventory manager UI with:
+  - smart resort lookup
+  - ownership guidance
+  - amenity tagging
+  - photo support
+  - richer saved-template cards
+
+### Traveler Search + Listing Details
+- Updated `/search` results to show:
+  - listing photos
+  - amenity chips
+  - savings percentage
+- Added amenity filtering on traveler search using the new standardized listing tags.
+- Updated listing details to show:
+  - photo gallery
+  - amenity chips
+  - ownership summary
+  - savings context
+  - structured week/season/points details
+
+### Verification
+- Verified production build after the inventory/searchability refresh (`npm run build` passed).
+
 ## 2026-03-07
 
 ### Owner Add-Listing Wizard

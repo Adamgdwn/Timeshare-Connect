@@ -42,6 +42,7 @@ create table public.owner_inventory (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
   label text not null,
+  resort_key text,
   resort_name text not null,
   city text not null,
   country text,
@@ -52,6 +53,9 @@ create table public.owner_inventory (
   inventory_notes text,
   unit_type text not null,
   resort_booking_url text,
+  description_template text,
+  amenities text[] not null default '{}',
+  photo_urls text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -81,6 +85,7 @@ create table public.listings (
   owner_id uuid not null references public.profiles(id) on delete cascade,
   inventory_id uuid references public.owner_inventory(id) on delete set null,
   resort_portal_id uuid references public.resort_portals(id) on delete set null,
+  resort_key text,
   ownership_type text not null default 'fixed_week' check (ownership_type in ('fixed_week', 'floating_week', 'points')),
   season text,
   home_week text,
@@ -95,6 +100,9 @@ create table public.listings (
   owner_price_cents integer not null check (owner_price_cents > 0),
   normal_price_cents integer not null check (normal_price_cents > 0),
   resort_booking_url text,
+  description_template text,
+  amenities text[] not null default '{}',
+  photo_urls text[] not null default '{}',
   description text,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -188,10 +196,13 @@ create table public.resort_reviews (
 
 create index listings_owner_id_idx on public.listings(owner_id);
 create index owner_inventory_owner_id_idx on public.owner_inventory(owner_id);
+create index owner_inventory_resort_key_idx on public.owner_inventory(resort_key);
 create index listings_resort_portal_id_idx on public.listings(resort_portal_id);
+create index listings_resort_key_idx on public.listings(resort_key);
 create index listings_city_idx on public.listings(city);
 create index listings_dates_idx on public.listings(check_in_date, check_out_date);
 create index listings_active_idx on public.listings(is_active);
+create index listings_amenities_idx on public.listings using gin (amenities);
 create index listing_views_listing_id_idx on public.listing_views(listing_id);
 create index offers_listing_id_idx on public.offers(listing_id);
 create index offers_traveler_id_idx on public.offers(traveler_id);

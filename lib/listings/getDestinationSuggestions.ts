@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
+import { getResortCatalogSuggestions } from "@/lib/listings/resortCatalog";
 
 type ListingSuggestionRow = {
   city: string | null;
@@ -35,6 +36,12 @@ export async function getDestinationSuggestions() {
     }
   }
 
+  for (const candidate of getResortCatalogSuggestions()) {
+    const normalized = candidate.toLowerCase();
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    suggestions.push(candidate);
+  }
+
   return suggestions.sort((a, b) => a.localeCompare(b));
 }
-

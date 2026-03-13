@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
 import ShareListingButton from "@/features/listings/components/ShareListingButton";
+import OwnerDraftResumeNotice from "@/features/listings/components/OwnerDraftResumeNotice";
 import { calculatePayoutBreakdown } from "@/lib/pricing";
 import OwnerWorkspaceNav from "@/features/owner/components/OwnerWorkspaceNav";
 
@@ -107,6 +108,8 @@ export default async function OwnerDashboardPage() {
           <p className="mt-1 text-2xl font-semibold">{bookingsAwaitingTravelerPayment}</p>
         </Link>
       </section>
+
+      <OwnerDraftResumeNotice />
 
       {error ? <p className="mt-4 text-sm text-red-700">Failed to load listings: {error.message}</p> : null}
 

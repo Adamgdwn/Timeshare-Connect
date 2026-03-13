@@ -4,11 +4,15 @@
 begin;
 
 alter table public.listings
+  add column if not exists resort_key text,
   add column if not exists ownership_type text not null default 'fixed_week',
   add column if not exists season text,
   add column if not exists home_week text,
   add column if not exists points_power integer,
-  add column if not exists inventory_notes text;
+  add column if not exists inventory_notes text,
+  add column if not exists description_template text,
+  add column if not exists amenities text[] not null default '{}',
+  add column if not exists photo_urls text[] not null default '{}';
 
 alter table public.listings
   drop constraint if exists listings_ownership_type_check;
@@ -24,5 +28,7 @@ alter table public.listings
   add constraint listings_points_power_check
   check (points_power is null or points_power > 0);
 
-commit;
+create index if not exists listings_resort_key_idx on public.listings(resort_key);
+create index if not exists listings_amenities_idx on public.listings using gin (amenities);
 
+commit;

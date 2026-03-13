@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import DestinationInput from "@/components/forms/DestinationInput";
 import TravelerHotelPriceLookup from "@/features/pricing/components/TravelerHotelPriceLookup";
 import { getDestinationSuggestions } from "@/lib/listings/getDestinationSuggestions";
+import { AMENITY_OPTIONS } from "@/lib/listings/resortCatalog";
+import { formatAmenityLabel, getSavingsPercentage } from "@/lib/listings/metadata";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -37,6 +39,7 @@ export default async function SearchPage({
     minPrice?: string;
     maxPrice?: string;
     unitType?: string;
+    amenity?: string | string[];
     minOwnerRating?: string;
     sort?: string;
   }>;
@@ -47,6 +50,11 @@ export default async function SearchPage({
   const checkOut = (params.checkOut || "").trim();
   const guests = (params.guests || "").trim();
   const unitType = (params.unitType || "").trim();
+  const amenityFilters = Array.isArray(params.amenity)
+    ? params.amenity.filter(Boolean)
+    : params.amenity
+      ? [params.amenity]
+      : [];
   const sort = (params.sort || "checkin_asc").trim();
   const minPrice = Number((params.minPrice || "").trim());
   const maxPrice = Number((params.maxPrice || "").trim());
@@ -58,7 +66,7 @@ export default async function SearchPage({
   let query = supabase
     .from("listings")
     .select(
-      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active"
+      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active,amenities,photo_urls"
     )
     .eq("is_active", true)
     .order("check_in_date", { ascending: true })
@@ -132,7 +140,14 @@ export default async function SearchPage({
       ? withRatings.filter((listing) => (listing.ownerRating?.avg ?? 0) >= minOwnerRating)
       : withRatings;
 
-  const sortedListings = [...filteredByRating].sort((a, b) => {
+  const filteredByAmenities =
+    amenityFilters.length > 0
+      ? filteredByRating.filter((listing) =>
+          amenityFilters.every((amenity) => (listing.amenities ?? []).includes(amenity))
+        )
+      : filteredByRating;
+
+  const sortedListings = [...filteredByAmenities].sort((a, b) => {
     if (sort === "price_asc") return a.owner_price_cents - b.owner_price_cents;
     if (sort === "price_desc") return b.owner_price_cents - a.owner_price_cents;
     if (sort === "savings_desc") {
@@ -238,6 +253,26 @@ export default async function SearchPage({
                 <option value="3 bedroom">3 bedroom</option>
               </select>
             </label>
+            <fieldset>
+              <legend className="text-xs font-medium text-zinc-700">Amenities</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {AMENITY_OPTIONS.map((amenity) => {
+                  const checked = amenityFilters.includes(amenity);
+                  return (
+                    <label className={`rounded-full border px-3 py-1 text-xs ${checked ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300 bg-white text-zinc-700"}`} key={amenity}>
+                      <input
+                        className="sr-only"
+                        defaultChecked={checked}
+                        name="amenity"
+                        type="checkbox"
+                        value={amenity}
+                      />
+                      {formatAmenityLabel(amenity)}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
             <label className="block text-xs font-medium text-zinc-700">
               Minimum owner rating
               <select
@@ -285,10 +320,22 @@ export default async function SearchPage({
             <div className="space-y-3">
               {sortedListings.map((listing) => {
                 const savingsCents = listing.normal_price_cents - listing.owner_price_cents;
+                const savingsPercent = getSavingsPercentage(listing.owner_price_cents, listing.normal_price_cents);
+                const listingAmenities = (listing.amenities ?? []) as string[];
+                const listingPhotoUrls = (listing.photo_urls ?? []) as string[];
                 return (
-                  <article className="tc-surface rounded-xl p-4" key={listing.id}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
+                  <article className="tc-surface overflow-hidden rounded-xl" key={listing.id}>
+                    <div className="grid gap-0 md:grid-cols-[240px_1fr]">
+                      <div className="min-h-[180px] bg-zinc-100">
+                        {listingPhotoUrls[0] ? (
+                          <img alt={listing.resort_name} className="h-full w-full object-cover" src={listingPhotoUrls[0]} />
+                        ) : (
+                          <div className="h-full w-full bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-300" />
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
                         <h2 className="text-lg font-semibold">{listing.resort_name}</h2>
                         <p className="text-sm text-zinc-600">
                           {listing.city}
@@ -297,29 +344,42 @@ export default async function SearchPage({
                         <p className="mt-1 text-sm text-zinc-700">
                           {formatDate(listing.check_in_date)} to {formatDate(listing.check_out_date)} ({getNights(listing.check_in_date, listing.check_out_date)} nights)
                         </p>
-                        <p className="text-sm text-zinc-700">{listing.unit_type}</p>
-                      </div>
-                      <div className="min-w-[170px] text-right">
-                        <p className="text-xs text-zinc-500 line-through">{formatMoney(listing.normal_price_cents)} normal</p>
-                        <p className="text-2xl font-semibold">{formatMoney(listing.owner_price_cents)}</p>
-                        <p className="text-xs text-[color:var(--tc-accent)]">Save {formatMoney(Math.max(0, savingsCents))}</p>
-                      </div>
-                    </div>
+                            <p className="text-sm text-zinc-700">{listing.unit_type}</p>
+                            {listingAmenities.length > 0 ? (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {listingAmenities.slice(0, 4).map((amenity) => (
+                                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-700" key={amenity}>
+                                    {formatAmenityLabel(amenity)}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="min-w-[170px] text-right">
+                            <p className="text-xs text-zinc-500 line-through">{formatMoney(listing.normal_price_cents)} normal</p>
+                            <p className="text-2xl font-semibold">{formatMoney(listing.owner_price_cents)}</p>
+                            <p className="text-xs text-[color:var(--tc-accent)]">
+                              Save {formatMoney(Math.max(0, savingsCents))}{savingsPercent ? ` (${savingsPercent}%)` : ""}
+                            </p>
+                          </div>
+                        </div>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border)] pt-3">
-                      <div className="flex flex-wrap gap-3 text-xs text-zinc-700">
-                        <span>
-                          Owner:{" "}
-                          {listing.ownerRating ? `${listing.ownerRating.avg.toFixed(1)} / 5 (${listing.ownerRating.count})` : "No ratings yet"}
-                        </span>
-                        <span>
-                          Resort:{" "}
-                          {listing.resortRating ? `${listing.resortRating.avg.toFixed(1)} / 5 (${listing.resortRating.count})` : "No ratings yet"}
-                        </span>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border)] pt-3">
+                          <div className="flex flex-wrap gap-3 text-xs text-zinc-700">
+                            <span>
+                              Owner:{" "}
+                              {listing.ownerRating ? `${listing.ownerRating.avg.toFixed(1)} / 5 (${listing.ownerRating.count})` : "No ratings yet"}
+                            </span>
+                            <span>
+                              Resort:{" "}
+                              {listing.resortRating ? `${listing.resortRating.avg.toFixed(1)} / 5 (${listing.resortRating.count})` : "No ratings yet"}
+                            </span>
+                          </div>
+                          <Link className="tc-btn-secondary rounded px-3 py-1.5 text-sm" href={`/listings/${listing.id}`}>
+                            View details
+                          </Link>
+                        </div>
                       </div>
-                      <Link className="tc-btn-secondary rounded px-3 py-1.5 text-sm" href={`/listings/${listing.id}`}>
-                        View details
-                      </Link>
                     </div>
                   </article>
                 );

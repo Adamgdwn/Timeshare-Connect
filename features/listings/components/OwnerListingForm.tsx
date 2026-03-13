@@ -8,6 +8,7 @@ import CityCountryLookup from "@/components/forms/CityCountryLookup";
 import ListingPhotoManager from "@/features/listings/components/ListingPhotoManager";
 import { calculatePayoutBreakdown } from "@/lib/pricing";
 import { OWNER_LISTING_DRAFT_KEY } from "@/lib/listings/draft";
+import { formatListingDateSummary, getNightCount } from "@/lib/listings/availability";
 import {
   createExternalPhotoAsset,
   serializePhotoAssets,
@@ -26,7 +27,6 @@ import {
   getIsoWeekLabel,
   getOwnershipCopy,
   getSavingsPercentage,
-  getStayLength,
   toggleAmenity,
 } from "@/lib/listings/metadata";
 
@@ -35,6 +35,7 @@ type ListingFormState = {
   selectedResortPortalId: string;
   resortSearch: string;
   resortKey: string;
+  availabilityMode: "exact" | "flex";
   ownershipType: "fixed_week" | "floating_week" | "points";
   seasonOption: string;
   season: string;
@@ -46,6 +47,10 @@ type ListingFormState = {
   city: string;
   country: string;
   photos: ListingPhotoAsset[];
+  availableStartDate: string;
+  availableEndDate: string;
+  minimumNights: string;
+  maximumNights: string;
   checkInDate: string;
   checkOutDate: string;
   unitTypeOption: string;
@@ -89,10 +94,15 @@ type ResortPortal = {
 
 type ComparableListing = {
   id: string;
+  availability_mode: "exact" | "flex";
+  available_start_date: string | null;
+  available_end_date: string | null;
+  minimum_nights: number | null;
+  maximum_nights: number | null;
   resort_name: string;
   city: string;
-  check_in_date: string;
-  check_out_date: string;
+  check_in_date: string | null;
+  check_out_date: string | null;
   unit_type: string;
   owner_price_cents: number;
   normal_price_cents: number;
@@ -111,6 +121,7 @@ const initialState: ListingFormState = {
   selectedResortPortalId: "",
   resortSearch: "",
   resortKey: "",
+  availabilityMode: "exact",
   ownershipType: "fixed_week",
   seasonOption: "",
   season: "",
@@ -122,6 +133,10 @@ const initialState: ListingFormState = {
   city: "",
   country: "",
   photos: [],
+  availableStartDate: "",
+  availableEndDate: "",
+  minimumNights: "7",
+  maximumNights: "",
   checkInDate: "",
   checkOutDate: "",
   unitTypeOption: "",
@@ -279,7 +294,16 @@ export default function OwnerListingForm() {
   const payout = calculatePayoutBreakdown(ownerPriceCents);
   const estimatedSavingsCents = Math.max(0, normalPriceCents - ownerPriceCents);
   const savingsPercentage = getSavingsPercentage(ownerPriceCents, normalPriceCents);
-  const stayLength = getStayLength(state.checkInDate, state.checkOutDate);
+  const stayLength =
+    state.availabilityMode === "exact"
+      ? getNightCount(state.checkInDate, state.checkOutDate)
+      : getNightCount(state.availableStartDate, state.availableEndDate);
+  const stayLengthLabel =
+    state.availabilityMode === "flex"
+      ? `${state.minimumNights || "-"}${state.maximumNights ? `-${state.maximumNights}` : "+"} nights`
+      : stayLength
+        ? `${stayLength} nights`
+        : "-";
   const checkInWeekLabel = getIsoWeekLabel(state.checkInDate);
   const resortMatches = useMemo(
     () => findResortCatalogMatches(state.resortSearch || state.resortName, 5),
@@ -416,7 +440,7 @@ export default function OwnerListingForm() {
       try {
         let query = supabase
           .from("listings")
-          .select("id,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,photo_urls")
+          .select("id,availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,photo_urls")
           .eq("is_active", true)
           .limit(8);
 
@@ -463,8 +487,20 @@ export default function OwnerListingForm() {
       if (!state.city.trim()) return "City is required.";
     }
     if (step === 2) {
-      if (!state.checkInDate || !state.checkOutDate) return "Check-in and check-out dates are required.";
-      if (state.checkOutDate <= state.checkInDate) return "Check-out date must be after check-in date.";
+      if (state.availabilityMode === "exact") {
+        if (!state.checkInDate || !state.checkOutDate) return "Check-in and check-out dates are required.";
+        if (state.checkOutDate <= state.checkInDate) return "Check-out date must be after check-in date.";
+      }
+      if (state.availabilityMode === "flex") {
+        if (!state.availableStartDate || !state.availableEndDate) return "Availability window start and end dates are required.";
+        if (state.availableEndDate < state.availableStartDate) return "Availability end date must be after the start date.";
+        const minNights = Number(state.minimumNights);
+        const maxNights = Number(state.maximumNights);
+        if (!(Number.isFinite(minNights) && minNights > 0)) return "Minimum nights must be a positive number.";
+        if (state.maximumNights && !(Number.isFinite(maxNights) && maxNights >= minNights)) {
+          return "Maximum nights must be blank or greater than minimum nights.";
+        }
+      }
       if (!state.unitType.trim()) return "Unit type is required.";
       if (state.ownershipType === "floating_week" && !state.season.trim()) return "Floating week owners should provide the available season.";
       if (state.ownershipType === "fixed_week" && !state.homeWeek.trim()) return "Fixed week owners should provide the owned week.";
@@ -527,6 +563,14 @@ export default function OwnerListingForm() {
             ? Math.round(parsedPoints)
             : null
           : null;
+      const minimumNights =
+        state.availabilityMode === "flex" && Number.isFinite(Number(state.minimumNights))
+          ? Math.round(Number(state.minimumNights))
+          : null;
+      const maximumNights =
+        state.availabilityMode === "flex" && state.maximumNights && Number.isFinite(Number(state.maximumNights))
+          ? Math.round(Number(state.maximumNights))
+          : null;
 
       const {
         data: { user },
@@ -542,6 +586,11 @@ export default function OwnerListingForm() {
         inventory_id: state.selectedInventoryId || null,
         resort_portal_id: state.selectedResortPortalId || null,
         resort_key: state.resortKey || null,
+        availability_mode: state.availabilityMode,
+        available_start_date: state.availabilityMode === "flex" ? state.availableStartDate : null,
+        available_end_date: state.availabilityMode === "flex" ? state.availableEndDate : null,
+        minimum_nights: minimumNights,
+        maximum_nights: maximumNights,
         ownership_type: state.ownershipType,
         season: state.season || null,
         home_week: state.homeWeek || null,
@@ -550,8 +599,8 @@ export default function OwnerListingForm() {
         resort_name: state.resortName,
         city: state.city,
         country: state.country || null,
-        check_in_date: state.checkInDate,
-        check_out_date: state.checkOutDate,
+        check_in_date: state.availabilityMode === "exact" ? state.checkInDate : null,
+        check_out_date: state.availabilityMode === "exact" ? state.checkOutDate : null,
         unit_type: state.unitType,
         owner_price_cents: ownerPriceCentsFinal,
         normal_price_cents: normalPriceCentsFinal,
@@ -834,6 +883,36 @@ export default function OwnerListingForm() {
             </div>
           </section>
 
+          <section className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <p className="text-sm font-semibold">What are you publishing?</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <button
+                className={`rounded-2xl border px-4 py-4 text-left transition ${
+                  state.availabilityMode === "exact" ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white hover:border-zinc-400"
+                }`}
+                type="button"
+                onClick={() => setState((current) => ({ ...current, availabilityMode: "exact" }))}
+              >
+                <span className="block text-sm font-semibold">Exact stay</span>
+                <span className={`mt-1 block text-xs ${state.availabilityMode === "exact" ? "text-zinc-200" : "text-zinc-600"}`}>
+                  You already know the exact check-in and check-out dates.
+                </span>
+              </button>
+              <button
+                className={`rounded-2xl border px-4 py-4 text-left transition ${
+                  state.availabilityMode === "flex" ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white hover:border-zinc-400"
+                }`}
+                type="button"
+                onClick={() => setState((current) => ({ ...current, availabilityMode: "flex" }))}
+              >
+                <span className="block text-sm font-semibold">Flexible availability</span>
+                <span className={`mt-1 block text-xs ${state.availabilityMode === "flex" ? "text-zinc-200" : "text-zinc-600"}`}>
+                  You can search/book within a larger availability window using floating inventory or points.
+                </span>
+              </button>
+            </div>
+          </section>
+
           <section className="grid gap-4 md:grid-cols-3">
             <label className="block rounded-2xl border border-zinc-200 bg-white p-4 text-sm">
               Season {state.ownershipType === "floating_week" ? "(required)" : "(optional)"}
@@ -913,48 +992,113 @@ export default function OwnerListingForm() {
           <section className="rounded-2xl border border-zinc-200 bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold">Choose dates</p>
-                <p className="text-xs text-zinc-600">Use the calendar picker to confirm the exact stay window.</p>
+                <p className="text-sm font-semibold">
+                  {state.availabilityMode === "exact" ? "Choose dates" : "Set your availability window"}
+                </p>
+                <p className="text-xs text-zinc-600">
+                  {state.availabilityMode === "exact"
+                    ? "Use the calendar picker to confirm the exact stay window."
+                    : "Travelers will search inside this range and request the dates they want."}
+                </p>
               </div>
-              {checkInWeekLabel ? <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700">{checkInWeekLabel}</span> : null}
+              {state.availabilityMode === "exact" && checkInWeekLabel ? (
+                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700">{checkInWeekLabel}</span>
+              ) : null}
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
-                Check-in date
-                <input
-                  className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
-                  type="date"
-                  value={state.checkInDate}
-                  onChange={(e) => setState((current) => ({ ...current, checkInDate: e.target.value }))}
-                />
-              </label>
-              <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
-                Check-out date
-                <input
-                  className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
-                  type="date"
-                  value={state.checkOutDate}
-                  onChange={(e) => setState((current) => ({ ...current, checkOutDate: e.target.value }))}
-                />
-              </label>
-            </div>
+            {state.availabilityMode === "exact" ? (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Check-in date
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    type="date"
+                    value={state.checkInDate}
+                    onChange={(e) => setState((current) => ({ ...current, checkInDate: e.target.value }))}
+                  />
+                </label>
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Check-out date
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    type="date"
+                    value={state.checkOutDate}
+                    onChange={(e) => setState((current) => ({ ...current, checkOutDate: e.target.value }))}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr_0.7fr_0.7fr]">
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Available from
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    type="date"
+                    value={state.availableStartDate}
+                    onChange={(e) => setState((current) => ({ ...current, availableStartDate: e.target.value }))}
+                  />
+                </label>
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Available until
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    type="date"
+                    value={state.availableEndDate}
+                    onChange={(e) => setState((current) => ({ ...current, availableEndDate: e.target.value }))}
+                  />
+                </label>
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Min nights
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    min="1"
+                    step="1"
+                    type="number"
+                    value={state.minimumNights}
+                    onChange={(e) => setState((current) => ({ ...current, minimumNights: e.target.value }))}
+                  />
+                </label>
+                <label className="block rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+                  Max nights
+                  <input
+                    className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-base"
+                    min="1"
+                    step="1"
+                    type="number"
+                    value={state.maximumNights}
+                    onChange={(e) => setState((current) => ({ ...current, maximumNights: e.target.value }))}
+                  />
+                </label>
+              </div>
+            )}
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <div className="rounded-2xl border border-zinc-200 p-4">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Stay length</p>
-                <p className="mt-1 text-lg font-semibold">{stayLength ? `${stayLength} nights` : "-"}</p>
+                <p className="mt-1 text-lg font-semibold">{stayLengthLabel}</p>
               </div>
               <div className="rounded-2xl border border-zinc-200 p-4">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Selected dates</p>
                 <p className="mt-1 text-sm font-medium">
-                  {formatDate(state.checkInDate)} to {formatDate(state.checkOutDate)}
+                  {formatListingDateSummary({
+                    availability_mode: state.availabilityMode,
+                    check_in_date: state.checkInDate,
+                    check_out_date: state.checkOutDate,
+                    available_start_date: state.availableStartDate,
+                    available_end_date: state.availableEndDate,
+                    minimum_nights: state.minimumNights ? Number(state.minimumNights) : null,
+                    maximum_nights: state.maximumNights ? Number(state.maximumNights) : null,
+                  })}
                 </p>
               </div>
               <div className="rounded-2xl border border-zinc-200 p-4">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Week check</p>
                 <p className="mt-1 text-sm font-medium">
-                  {state.homeWeek && checkInWeekLabel ? `${state.homeWeek} vs ${checkInWeekLabel}` : checkInWeekLabel || "-"}
+                  {state.availabilityMode === "exact"
+                    ? state.homeWeek && checkInWeekLabel
+                      ? `${state.homeWeek} vs ${checkInWeekLabel}`
+                      : checkInWeekLabel || "-"
+                    : `Night range: ${state.minimumNights || "-"}${state.maximumNights ? `-${state.maximumNights}` : "+"}`}
                 </p>
               </div>
             </div>
@@ -1128,10 +1272,18 @@ export default function OwnerListingForm() {
                 <div className="space-y-1 p-3">
                   <p className="text-sm font-semibold">{listing.resort_name}</p>
                   <p className="text-xs text-zinc-600">
-                    {listing.city} · {listing.unit_type}
+                    {listing.city} | {listing.unit_type}
                   </p>
                   <p className="text-xs text-zinc-600">
-                    {formatDate(listing.check_in_date)} to {formatDate(listing.check_out_date)}
+                    {formatListingDateSummary({
+                      availability_mode: listing.availability_mode,
+                      check_in_date: listing.check_in_date,
+                      check_out_date: listing.check_out_date,
+                      available_start_date: listing.available_start_date,
+                      available_end_date: listing.available_end_date,
+                      minimum_nights: listing.minimum_nights,
+                      maximum_nights: listing.maximum_nights,
+                    })}
                   </p>
                   <p className="text-sm font-medium">{formatMoney(listing.owner_price_cents)} owner price</p>
                 </div>
@@ -1181,9 +1333,17 @@ export default function OwnerListingForm() {
                     <div>
                       <p className="text-xs uppercase tracking-wide text-zinc-500">Dates</p>
                       <p className="text-sm font-medium">
-                        {formatDate(state.checkInDate)} to {formatDate(state.checkOutDate)}
+                        {formatListingDateSummary({
+                          availability_mode: state.availabilityMode,
+                          check_in_date: state.checkInDate,
+                          check_out_date: state.checkOutDate,
+                          available_start_date: state.availableStartDate,
+                          available_end_date: state.availableEndDate,
+                          minimum_nights: state.minimumNights ? Number(state.minimumNights) : null,
+                          maximum_nights: state.maximumNights ? Number(state.maximumNights) : null,
+                        })}
                       </p>
-                      <p className="text-sm text-zinc-600">{stayLength ? `${stayLength} nights` : "-"}</p>
+                      <p className="text-sm text-zinc-600">{stayLengthLabel}</p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-zinc-500">Unit</p>

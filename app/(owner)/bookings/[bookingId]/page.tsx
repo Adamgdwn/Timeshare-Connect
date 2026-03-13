@@ -9,6 +9,7 @@ import { calculatePayoutBreakdown } from "@/lib/pricing";
 import BookingCancelForm from "@/features/bookings/components/BookingCancelForm";
 import LeaveUserReviewForm from "@/features/reviews/components/LeaveUserReviewForm";
 import LeaveResortReviewForm from "@/features/reviews/components/LeaveResortReviewForm";
+import { formatListingDateSummary, formatRequestedStaySummary } from "@/lib/listings/availability";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -33,9 +34,9 @@ export default async function OwnerBookingProgressPage({
   }
 
   const selectWithCancelFields =
-    "id,status,listing_id,offer_id,traveler_id,owner_id,confirmation_number,proof_file_path,cancel_reason,canceled_by,canceled_at,admin_verified_at,first_payment_paid_at,final_payment_paid_at,created_at,listings(resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents),offers(guest_count,note,status)";
+    "id,status,listing_id,offer_id,traveler_id,owner_id,confirmation_number,proof_file_path,confirmed_check_in_date,confirmed_check_out_date,cancel_reason,canceled_by,canceled_at,admin_verified_at,first_payment_paid_at,final_payment_paid_at,created_at,listings(availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents),offers(guest_count,note,status,desired_check_in_date,desired_check_out_date)";
   const selectWithoutCancelFields =
-    "id,status,listing_id,offer_id,traveler_id,owner_id,confirmation_number,proof_file_path,admin_verified_at,first_payment_paid_at,final_payment_paid_at,created_at,listings(resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents),offers(guest_count,note,status)";
+    "id,status,listing_id,offer_id,traveler_id,owner_id,confirmation_number,proof_file_path,confirmed_check_in_date,confirmed_check_out_date,admin_verified_at,first_payment_paid_at,final_payment_paid_at,created_at,listings(availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents),offers(guest_count,note,status,desired_check_in_date,desired_check_out_date)";
 
   let { data: booking, error } = await supabase
     .from("bookings")
@@ -128,7 +129,24 @@ export default async function OwnerBookingProgressPage({
               <span className="font-medium">City:</span> {listing?.city}
             </p>
             <p>
-              <span className="font-medium">Dates:</span> {listing?.check_in_date} to {listing?.check_out_date}
+              <span className="font-medium">Listing availability:</span>{" "}
+              {listing
+                ? formatListingDateSummary({
+                    availability_mode: listing.availability_mode,
+                    check_in_date: listing.check_in_date,
+                    check_out_date: listing.check_out_date,
+                    available_start_date: listing.available_start_date,
+                    available_end_date: listing.available_end_date,
+                    minimum_nights: listing.minimum_nights,
+                    maximum_nights: listing.maximum_nights,
+                  })
+                : "-"}
+            </p>
+            <p>
+              <span className="font-medium">Confirmed stay:</span>{" "}
+              {booking.confirmed_check_in_date && booking.confirmed_check_out_date
+                ? `${booking.confirmed_check_in_date} to ${booking.confirmed_check_out_date}`
+                : "Not confirmed yet"}
             </p>
             <p>
               <span className="font-medium">Unit:</span> {listing?.unit_type}
@@ -157,6 +175,11 @@ export default async function OwnerBookingProgressPage({
           {offer?.note ? (
             <p className="rounded bg-zinc-50 p-3 text-sm text-zinc-700">
               <span className="font-medium">Traveler note:</span> {offer.note}
+            </p>
+          ) : null}
+          {offer?.desired_check_in_date && offer?.desired_check_out_date ? (
+            <p className="rounded bg-zinc-50 p-3 text-sm text-zinc-700">
+              <span className="font-medium">Traveler requested:</span> {formatRequestedStaySummary(offer)}
             </p>
           ) : null}
 

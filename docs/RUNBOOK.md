@@ -51,7 +51,8 @@ Run in Supabase SQL Editor, in this order:
 9. `supabase/rls.sql`
 10. `supabase/listing_search_enrichment_migration.sql`
 11. `supabase/listing_media_storage_migration.sql`
-12. `supabase/health_check.sql` (post-check)
+12. `supabase/flexible_inventory_migration.sql`
+13. `supabase/health_check.sql` (post-check)
 
 For a focused SQL order doc, see `docs/SUPABASE_RUN_ORDER.md`.
 
@@ -101,6 +102,12 @@ If starting from scratch instead:
   1. Run `supabase/listing_media_storage_migration.sql`
   2. Confirm the `listing-media` bucket exists and is public
   3. Retry the upload while logged in as an owner
+
+### Error: flexible availability requests do not show requested dates
+- Cause: `supabase/flexible_inventory_migration.sql` has not been applied.
+- Fix:
+  1. Run `supabase/flexible_inventory_migration.sql`
+  2. Refresh the app and retry creating a flexible inventory listing
 
 ## 6. Lint/Build Commands
 

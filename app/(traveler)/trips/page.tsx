@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
 import TravelerPaymentActions from "@/features/bookings/components/TravelerPaymentActions";
+import { formatListingDateSummary, formatRequestedStaySummary } from "@/lib/listings/availability";
 
 type OfferRow = {
   id: string;
@@ -10,11 +11,18 @@ type OfferRow = {
   note: string | null;
   status: string;
   created_at: string;
+  desired_check_in_date: string | null;
+  desired_check_out_date: string | null;
   listings: {
+    availability_mode: "exact" | "flex";
+    available_start_date: string | null;
+    available_end_date: string | null;
+    minimum_nights: number | null;
+    maximum_nights: number | null;
     resort_name: string;
     city: string;
-    check_in_date: string;
-    check_out_date: string;
+    check_in_date: string | null;
+    check_out_date: string | null;
     owner_price_cents: number;
   };
 };
@@ -64,7 +72,7 @@ export default async function TravelerTripsPage() {
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id,listing_id,guest_count,note,status,created_at,listings!inner(resort_name,city,check_in_date,check_out_date,owner_price_cents)"
+      "id,listing_id,guest_count,note,desired_check_in_date,desired_check_out_date,status,created_at,listings!inner(availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,resort_name,city,check_in_date,check_out_date,owner_price_cents)"
     )
     .eq("traveler_id", user.id)
     .order("created_at", { ascending: false });
@@ -131,7 +139,20 @@ export default async function TravelerTripsPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      {offer.listings.check_in_date} to {offer.listings.check_out_date}
+                      <div>
+                        {formatListingDateSummary({
+                          availability_mode: offer.listings.availability_mode,
+                          check_in_date: offer.listings.check_in_date,
+                          check_out_date: offer.listings.check_out_date,
+                          available_start_date: offer.listings.available_start_date,
+                          available_end_date: offer.listings.available_end_date,
+                          minimum_nights: offer.listings.minimum_nights,
+                          maximum_nights: offer.listings.maximum_nights,
+                        })}
+                      </div>
+                      {offer.listings.availability_mode === "flex" ? (
+                        <div className="text-xs text-zinc-500">{formatRequestedStaySummary(offer)}</div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">{offer.guest_count}</td>
                     <td className="px-4 py-3">{formatMoney(offer.listings.owner_price_cents)}</td>

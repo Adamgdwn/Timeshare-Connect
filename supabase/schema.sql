@@ -87,6 +87,11 @@ create table public.listings (
   inventory_id uuid references public.owner_inventory(id) on delete set null,
   resort_portal_id uuid references public.resort_portals(id) on delete set null,
   resort_key text,
+  availability_mode text not null default 'exact' check (availability_mode in ('exact', 'flex')),
+  available_start_date date,
+  available_end_date date,
+  minimum_nights integer,
+  maximum_nights integer,
   ownership_type text not null default 'fixed_week' check (ownership_type in ('fixed_week', 'floating_week', 'points')),
   season text,
   home_week text,
@@ -95,8 +100,8 @@ create table public.listings (
   resort_name text not null,
   city text not null,
   country text,
-  check_in_date date not null,
-  check_out_date date not null,
+  check_in_date date,
+  check_out_date date,
   unit_type text not null,
   owner_price_cents integer not null check (owner_price_cents > 0),
   normal_price_cents integer not null check (normal_price_cents > 0),
@@ -109,7 +114,23 @@ create table public.listings (
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint listings_date_range_chk check (check_out_date > check_in_date)
+  constraint listings_availability_shape_chk check (
+    (
+      availability_mode = 'exact'
+      and check_in_date is not null
+      and check_out_date is not null
+      and check_out_date > check_in_date
+    )
+    or (
+      availability_mode = 'flex'
+      and available_start_date is not null
+      and available_end_date is not null
+      and available_end_date >= available_start_date
+      and minimum_nights is not null
+      and minimum_nights > 0
+      and (maximum_nights is null or maximum_nights >= minimum_nights)
+    )
+  )
 );
 
 create trigger listings_set_updated_at
@@ -129,10 +150,17 @@ create table public.offers (
   traveler_id uuid not null references public.profiles(id) on delete cascade,
   guest_count integer not null check (guest_count > 0),
   note text,
+  desired_check_in_date date,
+  desired_check_out_date date,
   offered_price_cents integer check (offered_price_cents is null or offered_price_cents > 0),
   status text not null default 'new' check (status in ('new', 'accepted', 'declined', 'withdrawn', 'expired')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint offers_desired_date_range_chk check (
+    desired_check_in_date is null
+    or desired_check_out_date is null
+    or desired_check_out_date > desired_check_in_date
+  )
 );
 
 create trigger offers_set_updated_at
@@ -159,6 +187,8 @@ create table public.bookings (
   ),
   confirmation_number text,
   proof_file_path text,
+  confirmed_check_in_date date,
+  confirmed_check_out_date date,
   cancel_reason text,
   canceled_by uuid references public.profiles(id) on delete set null,
   canceled_at timestamptz,
@@ -166,7 +196,12 @@ create table public.bookings (
   final_payment_paid_at timestamptz,
   admin_verified_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint bookings_confirmed_date_range_chk check (
+    confirmed_check_in_date is null
+    or confirmed_check_out_date is null
+    or confirmed_check_out_date > confirmed_check_in_date
+  )
 );
 
 create trigger bookings_set_updated_at
@@ -203,6 +238,8 @@ create index listings_resort_portal_id_idx on public.listings(resort_portal_id);
 create index listings_resort_key_idx on public.listings(resort_key);
 create index listings_city_idx on public.listings(city);
 create index listings_dates_idx on public.listings(check_in_date, check_out_date);
+create index listings_availability_mode_idx on public.listings(availability_mode);
+create index listings_available_window_idx on public.listings(available_start_date, available_end_date);
 create index listings_active_idx on public.listings(is_active);
 create index listings_amenities_idx on public.listings using gin (amenities);
 create index listing_views_listing_id_idx on public.listing_views(listing_id);

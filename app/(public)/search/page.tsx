@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import DestinationInput from "@/components/forms/DestinationInput";
 import TravelerHotelPriceLookup from "@/features/pricing/components/TravelerHotelPriceLookup";
 import { getDestinationSuggestions } from "@/lib/listings/getDestinationSuggestions";
+import { formatListingDateSummary, matchesTravelerDates } from "@/lib/listings/availability";
 import { AMENITY_OPTIONS } from "@/lib/listings/resortCatalog";
 import { formatAmenityLabel, getSavingsPercentage } from "@/lib/listings/metadata";
 
@@ -11,21 +12,6 @@ function formatMoney(cents: number) {
     style: "currency",
     currency: "USD",
   }).format(cents / 100);
-}
-
-function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function getNights(checkIn: string, checkOut: string) {
-  const start = new Date(`${checkIn}T00:00:00`).getTime();
-  const end = new Date(`${checkOut}T00:00:00`).getTime();
-  const diff = end - start;
-  return Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24)));
 }
 
 export default async function SearchPage({
@@ -66,22 +52,14 @@ export default async function SearchPage({
   let query = supabase
     .from("listings")
     .select(
-      "id,owner_id,resort_name,city,country,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active,amenities,photo_urls"
+      "id,owner_id,resort_name,city,country,availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active,amenities,photo_urls"
     )
     .eq("is_active", true)
-    .order("check_in_date", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(100);
 
   if (q) {
     query = query.or(`resort_name.ilike.%${q}%,city.ilike.%${q}%`);
-  }
-
-  if (checkIn && checkOut) {
-    query = query.lte("check_in_date", checkOut).gte("check_out_date", checkIn);
-  } else if (checkIn) {
-    query = query.gte("check_out_date", checkIn);
-  } else if (checkOut) {
-    query = query.lte("check_in_date", checkOut);
   }
 
   if (Number.isFinite(minPrice) && minPrice > 0) {
@@ -147,14 +125,29 @@ export default async function SearchPage({
         )
       : filteredByRating;
 
-  const sortedListings = [...filteredByAmenities].sort((a, b) => {
+  const filteredByDates = filteredByAmenities.filter((listing) =>
+    matchesTravelerDates({
+      availabilityMode: listing.availability_mode ?? "exact",
+      requestedCheckIn: checkIn || undefined,
+      requestedCheckOut: checkOut || undefined,
+      checkInDate: listing.check_in_date,
+      checkOutDate: listing.check_out_date,
+      availableStartDate: listing.available_start_date,
+      availableEndDate: listing.available_end_date,
+      minimumNights: listing.minimum_nights,
+      maximumNights: listing.maximum_nights,
+    })
+  );
+
+  const sortedListings = [...filteredByDates].sort((a, b) => {
     if (sort === "price_asc") return a.owner_price_cents - b.owner_price_cents;
     if (sort === "price_desc") return b.owner_price_cents - a.owner_price_cents;
     if (sort === "savings_desc") {
       return b.normal_price_cents - b.owner_price_cents - (a.normal_price_cents - a.owner_price_cents);
     }
-
-    return a.check_in_date.localeCompare(b.check_in_date);
+    const aDate = a.check_in_date || a.available_start_date || "9999-12-31";
+    const bDate = b.check_in_date || b.available_start_date || "9999-12-31";
+    return aDate.localeCompare(bDate);
   });
 
   return (
@@ -342,9 +335,20 @@ export default async function SearchPage({
                           {listing.country ? `, ${listing.country}` : ""}
                         </p>
                         <p className="mt-1 text-sm text-zinc-700">
-                          {formatDate(listing.check_in_date)} to {formatDate(listing.check_out_date)} ({getNights(listing.check_in_date, listing.check_out_date)} nights)
+                          {formatListingDateSummary({
+                            availability_mode: listing.availability_mode,
+                            check_in_date: listing.check_in_date,
+                            check_out_date: listing.check_out_date,
+                            available_start_date: listing.available_start_date,
+                            available_end_date: listing.available_end_date,
+                            minimum_nights: listing.minimum_nights,
+                            maximum_nights: listing.maximum_nights,
+                          })}
                         </p>
-                            <p className="text-sm text-zinc-700">{listing.unit_type}</p>
+                        <p className="text-sm text-zinc-700">{listing.unit_type}</p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {listing.availability_mode === "flex" ? "Flexible inventory" : "Exact stay"}
+                        </p>
                             {listingAmenities.length > 0 ? (
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {listingAmenities.slice(0, 4).map((amenity) => (

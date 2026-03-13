@@ -6,14 +6,32 @@ import { createClient } from "@/lib/supabase/client";
 
 type RequestWeekFormProps = {
   listingId: string;
+  availabilityMode?: "exact" | "flex";
+  exactCheckInDate?: string | null;
+  exactCheckOutDate?: string | null;
+  availableStartDate?: string | null;
+  availableEndDate?: string | null;
+  minimumNights?: number | null;
+  maximumNights?: number | null;
 };
 
-export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
+export default function RequestWeekForm({
+  listingId,
+  availabilityMode = "exact",
+  exactCheckInDate,
+  exactCheckOutDate,
+  availableStartDate,
+  availableEndDate,
+  minimumNights,
+  maximumNights,
+}: RequestWeekFormProps) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const pathname = usePathname();
 
   const [guestCount, setGuestCount] = useState("2");
+  const [desiredCheckInDate, setDesiredCheckInDate] = useState("");
+  const [desiredCheckOutDate, setDesiredCheckOutDate] = useState("");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +45,30 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
       const count = Number(guestCount);
       if (!Number.isFinite(count) || count <= 0) {
         throw new Error("Guest count must be at least 1.");
+      }
+
+      if (availabilityMode === "flex") {
+        if (!desiredCheckInDate || !desiredCheckOutDate) {
+          throw new Error("Choose your requested check-in and check-out dates.");
+        }
+        if (desiredCheckOutDate <= desiredCheckInDate) {
+          throw new Error("Requested check-out must be after requested check-in.");
+        }
+        const requestedNights =
+          (new Date(`${desiredCheckOutDate}T00:00:00`).getTime() - new Date(`${desiredCheckInDate}T00:00:00`).getTime()) /
+          (1000 * 60 * 60 * 24);
+        if (availableStartDate && desiredCheckInDate < availableStartDate) {
+          throw new Error("Requested check-in is before the available window.");
+        }
+        if (availableEndDate && desiredCheckOutDate > availableEndDate) {
+          throw new Error("Requested check-out is after the available window.");
+        }
+        if (minimumNights && requestedNights < minimumNights) {
+          throw new Error(`Requested stay must be at least ${minimumNights} nights.`);
+        }
+        if (maximumNights && requestedNights > maximumNights) {
+          throw new Error(`Requested stay must be ${maximumNights} nights or less.`);
+        }
       }
 
       const {
@@ -46,6 +88,8 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
         traveler_id: user.id,
         guest_count: count,
         note: note || null,
+        desired_check_in_date: availabilityMode === "flex" ? desiredCheckInDate : null,
+        desired_check_out_date: availabilityMode === "flex" ? desiredCheckOutDate : null,
         status: "new",
       });
 
@@ -54,6 +98,8 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
       setMessage("Request submitted. You can track updates in My Trips.");
       setNote("");
       setGuestCount("2");
+      setDesiredCheckInDate("");
+      setDesiredCheckOutDate("");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to submit request.");
@@ -64,7 +110,14 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
 
   return (
     <form className="tc-surface space-y-3 rounded-xl p-4" onSubmit={onSubmit}>
-      <h2 className="tc-title text-base font-semibold">Request this week</h2>
+      <h2 className="tc-title text-base font-semibold">
+        {availabilityMode === "flex" ? "Request this availability" : "Request this week"}
+      </h2>
+      {availabilityMode === "exact" && exactCheckInDate && exactCheckOutDate ? (
+        <p className="text-xs text-zinc-600">
+          This listing is for {exactCheckInDate} to {exactCheckOutDate}.
+        </p>
+      ) : null}
       <label className="block text-sm">
         Guest count
         <input
@@ -77,11 +130,50 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
           onChange={(e) => setGuestCount(e.target.value)}
         />
       </label>
+      {availabilityMode === "flex" ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm">
+            Requested check-in
+            <input
+              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+              max={availableEndDate ?? undefined}
+              min={availableStartDate ?? undefined}
+              required
+              type="date"
+              value={desiredCheckInDate}
+              onChange={(e) => setDesiredCheckInDate(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            Requested check-out
+            <input
+              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+              max={availableEndDate ?? undefined}
+              min={availableStartDate ?? undefined}
+              required
+              type="date"
+              value={desiredCheckOutDate}
+              onChange={(e) => setDesiredCheckOutDate(e.target.value)}
+            />
+          </label>
+        </div>
+      ) : null}
+      {availabilityMode === "flex" ? (
+        <p className="text-xs text-zinc-600">
+          Search window: {availableStartDate || "-"} to {availableEndDate || "-"}.
+          {minimumNights ? ` Min ${minimumNights} nights.` : ""}
+          {maximumNights ? ` Max ${maximumNights} nights.` : ""}
+        </p>
+      ) : null}
       <label className="block text-sm">
         Note (optional)
         <textarea
           className="mt-1 min-h-20 w-full rounded border border-zinc-300 px-3 py-2"
-          placeholder="Any arrival details or special notes"
+          placeholder={
+            availabilityMode === "flex"
+              ? "Share preferred dates, date flexibility, or unit preferences"
+              : "Any arrival details or special notes"
+          }
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -91,7 +183,7 @@ export default function RequestWeekForm({ listingId }: RequestWeekFormProps) {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "Submitting..." : "Request this week"}
+        {isSubmitting ? "Submitting..." : availabilityMode === "flex" ? "Request availability" : "Request this week"}
       </button>
       {message ? <p className="text-sm text-zinc-700">{message}</p> : null}
     </form>

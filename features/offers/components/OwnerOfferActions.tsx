@@ -11,6 +11,11 @@ type OwnerOfferActionsProps = {
   travelerId: string;
   ownerId: string;
   currentStatus: string;
+  listingAvailabilityMode: "exact" | "flex";
+  listingCheckInDate?: string | null;
+  listingCheckOutDate?: string | null;
+  desiredCheckInDate?: string | null;
+  desiredCheckOutDate?: string | null;
   bookingId?: string;
 };
 
@@ -20,6 +25,11 @@ export default function OwnerOfferActions({
   travelerId,
   ownerId,
   currentStatus,
+  listingAvailabilityMode,
+  listingCheckInDate,
+  listingCheckOutDate,
+  desiredCheckInDate,
+  desiredCheckOutDate,
   bookingId,
 }: OwnerOfferActionsProps) {
   const supabase = useMemo(() => createClient(), []);
@@ -35,12 +45,21 @@ export default function OwnerOfferActions({
       const { error: offerError } = await supabase.from("offers").update({ status: "accepted" }).eq("id", offerId);
       if (offerError) throw offerError;
 
+      const confirmedCheckInDate = listingAvailabilityMode === "flex" ? desiredCheckInDate ?? null : listingCheckInDate ?? null;
+      const confirmedCheckOutDate = listingAvailabilityMode === "flex" ? desiredCheckOutDate ?? null : listingCheckOutDate ?? null;
+
+      if (listingAvailabilityMode === "flex" && (!confirmedCheckInDate || !confirmedCheckOutDate)) {
+        throw new Error("Flexible availability offers must include traveler-requested dates before acceptance.");
+      }
+
       if (!bookingId) {
         const { error: bookingError } = await supabase.from("bookings").insert({
           offer_id: offerId,
           listing_id: listingId,
           traveler_id: travelerId,
           owner_id: ownerId,
+          confirmed_check_in_date: confirmedCheckInDate,
+          confirmed_check_out_date: confirmedCheckOutDate,
           status: "awaiting_first_payment",
         });
 

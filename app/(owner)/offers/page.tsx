@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/features/auth/components/SignOutButton";
 import OwnerOfferActions from "@/features/offers/components/OwnerOfferActions";
 import OwnerWorkspaceNav from "@/features/owner/components/OwnerWorkspaceNav";
+import { formatListingDateSummary, formatRequestedStaySummary } from "@/lib/listings/availability";
 
 type OfferRow = {
   id: string;
@@ -10,16 +11,23 @@ type OfferRow = {
   traveler_id: string;
   guest_count: number;
   note: string | null;
+  desired_check_in_date: string | null;
+  desired_check_out_date: string | null;
   status: string;
   created_at: string;
 };
 
 type OwnerListingRow = {
   id: string;
+  availability_mode: "exact" | "flex";
+  available_start_date: string | null;
+  available_end_date: string | null;
+  minimum_nights: number | null;
+  maximum_nights: number | null;
   resort_name: string;
   city: string;
-  check_in_date: string;
-  check_out_date: string;
+  check_in_date: string | null;
+  check_out_date: string | null;
   owner_id: string;
 };
 
@@ -54,7 +62,7 @@ export default async function OwnerOffersPage({
 
   const { data: ownerListings, error: ownerListingsError } = await supabase
     .from("listings")
-    .select("id,resort_name,city,check_in_date,check_out_date,owner_id")
+    .select("id,availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,resort_name,city,check_in_date,check_out_date,owner_id")
     .eq("owner_id", user.id);
 
   const ownerListingsRows = (ownerListings ?? []) as OwnerListingRow[];
@@ -69,7 +77,7 @@ export default async function OwnerOffersPage({
   if (!error && listingIds.length > 0) {
     let offersQuery = supabase
       .from("offers")
-      .select("id,listing_id,traveler_id,guest_count,note,status,created_at")
+      .select("id,listing_id,traveler_id,guest_count,note,desired_check_in_date,desired_check_out_date,status,created_at")
       .in("listing_id", listingIds)
       .order("created_at", { ascending: false });
 
@@ -174,8 +182,23 @@ export default async function OwnerOffersPage({
                       <div className="font-medium">{listing?.resort_name || "Listing"}</div>
                       <div className="text-zinc-600">{listing?.city || "-"}</div>
                       <div className="text-zinc-500">
-                        {listing?.check_in_date || "-"} to {listing?.check_out_date || "-"}
+                        {listing
+                          ? formatListingDateSummary({
+                              availability_mode: listing.availability_mode,
+                              check_in_date: listing.check_in_date,
+                              check_out_date: listing.check_out_date,
+                              available_start_date: listing.available_start_date,
+                              available_end_date: listing.available_end_date,
+                              minimum_nights: listing.minimum_nights,
+                              maximum_nights: listing.maximum_nights,
+                            })
+                          : "-"}
                       </div>
+                      {listing?.availability_mode === "flex" ? (
+                        <div className="text-xs text-zinc-500">
+                          Traveler requested: {formatRequestedStaySummary(offer)}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">{offer.guest_count}</td>
                     <td className="px-4 py-3">{offer.note || "-"}</td>
@@ -187,6 +210,11 @@ export default async function OwnerOffersPage({
                       <OwnerOfferActions
                         bookingId={booking?.id}
                         currentStatus={offer.status}
+                        desiredCheckInDate={offer.desired_check_in_date}
+                        desiredCheckOutDate={offer.desired_check_out_date}
+                        listingAvailabilityMode={listing?.availability_mode || "exact"}
+                        listingCheckInDate={listing?.check_in_date}
+                        listingCheckOutDate={listing?.check_out_date}
                         listingId={offer.listing_id}
                         offerId={offer.id}
                         ownerId={listing?.owner_id || user.id}

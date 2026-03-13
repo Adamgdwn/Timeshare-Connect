@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import ShareListingButton from "@/features/listings/components/ShareListingButton";
 import RequestWeekForm from "@/features/offers/components/RequestWeekForm";
 import { formatAmenityLabel, getOwnershipCopy, getSavingsPercentage } from "@/lib/listings/metadata";
+import { formatListingDateSummary } from "@/lib/listings/availability";
 
 type ResortPortalSummary = {
   id: string;
@@ -32,7 +33,7 @@ export default async function ListingDetailsPage({
   const { data: listing, error } = await supabase
     .from("listings")
     .select(
-      "id,owner_id,resort_name,city,country,ownership_type,season,home_week,points_power,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,amenities,photo_urls,is_active,resort_portals(id,resort_name,brand,booking_base_url,requires_login,supports_deeplink,notes)"
+      "id,owner_id,resort_name,city,country,availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,ownership_type,season,home_week,points_power,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,resort_booking_url,description,amenities,photo_urls,is_active,resort_portals(id,resort_name,brand,booking_base_url,requires_login,supports_deeplink,notes)"
     )
     .eq("id", listingId)
     .maybeSingle();
@@ -113,7 +114,16 @@ export default async function ListingDetailsPage({
 
           <div className="grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
             <p>
-              <span className="font-medium">Dates:</span> {listing.check_in_date} to {listing.check_out_date}
+              <span className="font-medium">Dates:</span>{" "}
+              {formatListingDateSummary({
+                availability_mode: listing.availability_mode,
+                check_in_date: listing.check_in_date,
+                check_out_date: listing.check_out_date,
+                available_start_date: listing.available_start_date,
+                available_end_date: listing.available_end_date,
+                minimum_nights: listing.minimum_nights,
+                maximum_nights: listing.maximum_nights,
+              })}
             </p>
             <p>
               <span className="font-medium">Unit type:</span> {listing.unit_type}
@@ -189,7 +199,16 @@ export default async function ListingDetailsPage({
         </section>
 
         <div>
-          <RequestWeekForm listingId={listing.id} />
+          <RequestWeekForm
+            availabilityMode={listing.availability_mode}
+            availableEndDate={listing.available_end_date}
+            availableStartDate={listing.available_start_date}
+            exactCheckInDate={listing.check_in_date}
+            exactCheckOutDate={listing.check_out_date}
+            listingId={listing.id}
+            maximumNights={listing.maximum_nights}
+            minimumNights={listing.minimum_nights}
+          />
         </div>
       </div>
     </main>

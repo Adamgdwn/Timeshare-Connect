@@ -5,6 +5,7 @@ import ShareListingButton from "@/features/listings/components/ShareListingButto
 import OwnerDraftResumeNotice from "@/features/listings/components/OwnerDraftResumeNotice";
 import { calculatePayoutBreakdown } from "@/lib/pricing";
 import OwnerWorkspaceNav from "@/features/owner/components/OwnerWorkspaceNav";
+import { formatListingDateSummary } from "@/lib/listings/availability";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -31,7 +32,7 @@ export default async function OwnerDashboardPage() {
   const { data: listings, error } = await supabase
     .from("listings")
     .select(
-      "id,ownership_type,season,home_week,points_power,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active,created_at"
+      "id,availability_mode,available_start_date,available_end_date,minimum_nights,maximum_nights,ownership_type,season,home_week,points_power,resort_name,city,check_in_date,check_out_date,unit_type,owner_price_cents,normal_price_cents,is_active,created_at"
     )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
@@ -146,7 +147,15 @@ export default async function OwnerDashboardPage() {
                       <div className="text-zinc-600">{listing.city}</div>
                     </td>
                     <td className="px-4 py-3">
-                      {listing.check_in_date} to {listing.check_out_date}
+                      {formatListingDateSummary({
+                        availability_mode: listing.availability_mode,
+                        check_in_date: listing.check_in_date,
+                        check_out_date: listing.check_out_date,
+                        available_start_date: listing.available_start_date,
+                        available_end_date: listing.available_end_date,
+                        minimum_nights: listing.minimum_nights,
+                        maximum_nights: listing.maximum_nights,
+                      })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="capitalize">{listing.ownership_type.replaceAll("_", " ")}</div>

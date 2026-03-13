@@ -88,6 +88,32 @@ This file tracks major development changes in plain language.
   - `supabase/listing_media_storage_migration.sql`
 - Updated Supabase ops docs to include the new migration and troubleshooting guidance.
 
+### Flexible Availability Inventory
+- Added a flexible inventory mode so owners can publish:
+  - exact stay listings
+  - flexible availability windows for floating inventory or points-based stays
+- Added listing-level availability fields for:
+  - `availability_mode`
+  - `available_start_date`
+  - `available_end_date`
+  - `minimum_nights`
+  - `maximum_nights`
+- Added offer-level traveler requested date fields:
+  - `desired_check_in_date`
+  - `desired_check_out_date`
+- Added booking-level confirmed stay dates:
+  - `confirmed_check_in_date`
+  - `confirmed_check_out_date`
+- Updated the owner listing wizard to support publishing flexible availability instead of forcing exact dates.
+- Updated traveler search, listing detail, owner offers, traveler trips, and booking summary pages to reflect:
+  - exact stays
+  - flexible windows
+  - traveler-requested stay dates
+  - booking-confirmed dates after owner acceptance
+- Added migration for existing databases:
+  - `supabase/flexible_inventory_migration.sql`
+- Verified production build after the flexible inventory update (`npm run build` passed).
+
 ## 2026-03-07
 
 ### Owner Add-Listing Wizard

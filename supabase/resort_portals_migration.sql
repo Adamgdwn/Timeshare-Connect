@@ -42,7 +42,8 @@ values
   ('Wyndham Destinations', 'Wyndham', 'https://www.wyndhamdestinations.com/', true, false, 'Owner access required for points inventory and booking actions.'),
   ('Westgate Resorts', 'Westgate', 'https://www.westgateresorts.com/', true, false, 'Some public promo pages exist but member booking requires login.'),
   ('Bluegreen Vacations', 'Bluegreen', 'https://www.bluegreenvacations.com/', true, false, 'Use owner portal and guest certificate workflow.'),
-  ('RCI', 'RCI', 'https://www.rci.com/', true, false, 'Exchange portal login required for availability details.')
+  ('RCI', 'RCI', 'https://www.rci.com/', true, false, 'Exchange portal login required for availability details.'),
+  ('ResortCom', 'ResortCom', 'https://reservation.resortcom.com/account', true, false, 'Owner/member login required to search inventory and complete bookings.')
 on conflict (resort_name) do update
 set brand = excluded.brand,
     booking_base_url = excluded.booking_base_url,
@@ -51,4 +52,3 @@ set brand = excluded.brand,
     notes = excluded.notes;
 
 commit;
-

@@ -1202,22 +1202,28 @@ export default function OwnerListingForm() {
               </label>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+              <div className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Traveler pays</p>
-                <p className="mt-1 text-lg font-semibold">{ownerPriceCents ? formatMoney(ownerPriceCents) : "-"}</p>
+                <p className="mt-1 break-words text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+                  {ownerPriceCents ? formatMoney(ownerPriceCents) : "-"}
+                </p>
               </div>
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+              <div className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Platform fee</p>
-                <p className="mt-1 text-lg font-semibold">{ownerPriceCents ? formatMoney(payout.platformFeeCents) : "-"}</p>
+                <p className="mt-1 break-words text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+                  {ownerPriceCents ? formatMoney(payout.platformFeeCents) : "-"}
+                </p>
               </div>
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+              <div className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Owner net</p>
-                <p className="mt-1 text-lg font-semibold">{ownerPriceCents ? formatMoney(payout.ownerNetCents) : "-"}</p>
+                <p className="mt-1 break-words text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
+                  {ownerPriceCents ? formatMoney(payout.ownerNetCents) : "-"}
+                </p>
               </div>
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
+              <div className="min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Traveler savings</p>
-                <p className="mt-1 text-lg font-semibold">
+                <p className="mt-1 break-words text-lg font-semibold leading-tight [overflow-wrap:anywhere]">
                   {estimatedSavingsCents ? `${formatMoney(estimatedSavingsCents)}${savingsPercentage ? ` (${savingsPercentage}% off)` : ""}` : "-"}
                 </p>
               </div>

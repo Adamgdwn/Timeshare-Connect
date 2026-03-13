@@ -148,6 +148,23 @@ export const RESORT_CATALOG: ResortCatalogItem[] = [
       "Upscale North County San Diego residence club stay with villa space, golf access, and a polished resort setting.",
     defaultUnitTypes: ["1 bedroom", "2 bedroom"],
   },
+  {
+    key: "garza-blanca-los-cabos",
+    name: "Garza Blanca Resort & Spa Los Cabos",
+    city: "Cabo San Lucas",
+    country: "Mexico",
+    brand: "ResortCom",
+    bookingBaseUrl: "https://reservation.resortcom.com/account",
+    photos: [
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80",
+    ],
+    amenities: ["pool", "beach access", "ocean view", "full kitchen", "balcony", "spa", "golf", "wifi"],
+    defaultDescription:
+      "Beachfront Los Cabos stay with ocean views, resort pools, upscale dining, and spacious villa-style accommodations.",
+    defaultUnitTypes: ["studio", "1 bedroom", "2 bedroom", "3 bedroom"],
+  },
 ];
 
 function normalize(value: string) {

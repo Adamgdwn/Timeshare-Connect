@@ -114,6 +114,12 @@ This file tracks major development changes in plain language.
   - `supabase/flexible_inventory_migration.sql`
 - Verified production build after the flexible inventory update (`npm run build` passed).
 
+### Resort Catalog / Portal Additions
+- Added `ResortCom` to the resort portal seed list for owner booking portal selection.
+- Added `Garza Blanca Resort & Spa Los Cabos` to the local smart resort catalog so owner listing creation can recognize and prefill it.
+- Added one-off SQL seed for existing databases:
+  - `supabase/resortcom_portal_seed.sql`
+
 ## 2026-03-07
 
 ### Owner Add-Listing Wizard

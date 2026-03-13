@@ -21,6 +21,7 @@ create table if not exists public.owner_inventory (
   description_template text,
   amenities text[] not null default '{}',
   photo_urls text[] not null default '{}',
+  photo_storage_paths text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -29,7 +30,8 @@ alter table public.owner_inventory
   add column if not exists resort_key text,
   add column if not exists description_template text,
   add column if not exists amenities text[] not null default '{}',
-  add column if not exists photo_urls text[] not null default '{}';
+  add column if not exists photo_urls text[] not null default '{}',
+  add column if not exists photo_storage_paths text[] not null default '{}';
 
 alter table public.owner_inventory
   drop constraint if exists owner_inventory_ownership_type_check;

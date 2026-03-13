@@ -12,7 +12,8 @@ alter table public.listings
   add column if not exists inventory_notes text,
   add column if not exists description_template text,
   add column if not exists amenities text[] not null default '{}',
-  add column if not exists photo_urls text[] not null default '{}';
+  add column if not exists photo_urls text[] not null default '{}',
+  add column if not exists photo_storage_paths text[] not null default '{}';
 
 alter table public.listings
   drop constraint if exists listings_ownership_type_check;

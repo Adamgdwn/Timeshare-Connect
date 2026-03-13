@@ -5,8 +5,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import CityCountryLookup from "@/components/forms/CityCountryLookup";
+import ListingPhotoManager from "@/features/listings/components/ListingPhotoManager";
 import { calculatePayoutBreakdown } from "@/lib/pricing";
 import { OWNER_LISTING_DRAFT_KEY } from "@/lib/listings/draft";
+import {
+  createExternalPhotoAsset,
+  serializePhotoAssets,
+  type ListingPhotoAsset,
+} from "@/lib/listings/media";
 import {
   AMENITY_OPTIONS,
   findResortCatalogMatches,
@@ -39,7 +45,7 @@ type ListingFormState = {
   resortName: string;
   city: string;
   country: string;
-  photoUrls: string[];
+  photos: ListingPhotoAsset[];
   checkInDate: string;
   checkOutDate: string;
   unitTypeOption: string;
@@ -69,6 +75,7 @@ type OwnerInventoryTemplate = {
   description_template: string | null;
   amenities: string[] | null;
   photo_urls: string[] | null;
+  photo_storage_paths?: string[] | null;
 };
 
 type ResortPortal = {
@@ -114,7 +121,7 @@ const initialState: ListingFormState = {
   resortName: "",
   city: "",
   country: "",
-  photoUrls: [],
+  photos: [],
   checkInDate: "",
   checkOutDate: "",
   unitTypeOption: "",
@@ -177,10 +184,6 @@ function ensureAmenityOptions(values: string[] | null | undefined): AmenityOptio
   );
 }
 
-function dedupePhotoUrls(urls: string[]) {
-  return Array.from(new Set(urls.map((url) => url.trim()).filter(Boolean)));
-}
-
 function hasMeaningfulDraft(state: ListingFormState) {
   return Boolean(
     state.selectedInventoryId ||
@@ -210,7 +213,7 @@ function applyCatalogSelection(
     resortBookingUrl: resort.bookingBaseUrl ?? current.resortBookingUrl,
     descriptionTemplate: resort.defaultDescription,
     description: current.description || resort.defaultDescription,
-    photoUrls: resort.photos,
+    photos: resort.photos.map(createExternalPhotoAsset),
     amenities: resort.amenities,
     unitTypeOption: resolveUnitTypeOption(current.unitType || resort.defaultUnitTypes[0] || ""),
     unitType: current.unitType || resort.defaultUnitTypes[0] || "",
@@ -223,7 +226,7 @@ function applyTemplateSelection(
   portals: ResortPortal[]
 ): ListingFormState {
   const catalogResort = template.resort_key ? getResortCatalogByKey(template.resort_key) : null;
-  const resortPhotos = dedupePhotoUrls([...(template.photo_urls ?? []), ...(catalogResort?.photos ?? [])]);
+  const resortPhotos = [...(template.photo_urls ?? []), ...(catalogResort?.photos ?? [])].map(createExternalPhotoAsset);
   const season = template.season || "";
   const homeWeek = template.home_week || "";
   const unitType = template.unit_type || "";
@@ -245,7 +248,7 @@ function applyTemplateSelection(
     resortName: template.resort_name,
     city: template.city,
     country: template.country || "",
-    photoUrls: resortPhotos,
+    photos: resortPhotos,
     unitTypeOption: resolveUnitTypeOption(unitType),
     unitType,
     resortBookingUrl: template.resort_booking_url || catalogResort?.bookingBaseUrl || "",
@@ -266,7 +269,6 @@ export default function OwnerListingForm() {
   const [normalPriceEditedManually, setNormalPriceEditedManually] = useState(false);
   const [comparableListings, setComparableListings] = useState<ComparableListing[]>([]);
   const [comparableStatus, setComparableStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
-  const [photoUrlDraft, setPhotoUrlDraft] = useState("");
   const [message, setMessage] = useState("");
   const [draftNotice, setDraftNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -492,13 +494,6 @@ export default function OwnerListingForm() {
     setCurrentStep((value) => Math.max(1, value - 1));
   }
 
-  function handleAddPhoto() {
-    const nextPhoto = photoUrlDraft.trim();
-    if (!nextPhoto) return;
-    setState((current) => ({ ...current, photoUrls: dedupePhotoUrls([...current.photoUrls, nextPhoto]) }));
-    setPhotoUrlDraft("");
-  }
-
   function clearDraft() {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(OWNER_LISTING_DRAFT_KEY);
@@ -540,6 +535,8 @@ export default function OwnerListingForm() {
       if (authError) throw authError;
       if (!user) throw new Error("You must be logged in as an owner.");
 
+      const { photoUrls, photoStoragePaths } = serializePhotoAssets(state.photos);
+
       const { error: insertError } = await supabase.from("listings").insert({
         owner_id: user.id,
         inventory_id: state.selectedInventoryId || null,
@@ -562,7 +559,8 @@ export default function OwnerListingForm() {
         description_template: state.descriptionTemplate || null,
         description: state.description || null,
         amenities: state.amenities,
-        photo_urls: state.photoUrls,
+        photo_urls: photoUrls,
+        photo_storage_paths: photoStoragePaths,
         is_active: true,
       });
       if (insertError) throw insertError;
@@ -765,55 +763,14 @@ export default function OwnerListingForm() {
           </section>
 
           <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold">Photos</p>
-                  <p className="text-xs text-zinc-600">Aim for at least 3 photos. Recognized resorts can preload these.</p>
-                </div>
-                <span className={`rounded-full px-3 py-1 text-xs ${state.photoUrls.length >= 3 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                  {state.photoUrls.length}/3 photos
-                </span>
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <input
-                  className="w-full rounded-xl border border-zinc-300 px-3 py-2"
-                  placeholder="Paste a hosted image URL"
-                  value={photoUrlDraft}
-                  onChange={(e) => setPhotoUrlDraft(e.target.value)}
-                />
-                <button className="rounded-xl border border-zinc-300 px-4 py-2 text-sm" type="button" onClick={handleAddPhoto}>
-                  Add
-                </button>
-              </div>
-
-              {state.photoUrls.length > 0 ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {state.photoUrls.map((photoUrl) => (
-                    <div className="relative overflow-hidden rounded-2xl border border-zinc-200" key={photoUrl}>
-                      <img alt={state.resortName || "Resort photo"} className="h-32 w-full object-cover" src={photoUrl} />
-                      <button
-                        className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs"
-                        type="button"
-                        onClick={() =>
-                          setState((current) => ({
-                            ...current,
-                            photoUrls: current.photoUrls.filter((url) => url !== photoUrl),
-                          }))
-                        }
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-600">
-                  Add resort photos so your traveler card feels complete.
-                </div>
-              )}
-            </div>
+            <ListingPhotoManager
+              helperText="Aim for at least 3 photos. Recognized resorts can preload these, and you can upload your own unit shots."
+              minimumCount={3}
+              onChange={(photos) => setState((current) => ({ ...current, photos }))}
+              photos={state.photos}
+              scope="listing"
+              title="Photos"
+            />
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
               <div className="flex items-center justify-between gap-3">
@@ -1198,8 +1155,8 @@ export default function OwnerListingForm() {
             </div>
 
             <article className="overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50">
-              {state.photoUrls[0] ? (
-                <img alt={state.resortName || "Resort photo"} className="h-56 w-full object-cover" src={state.photoUrls[0]} />
+              {state.photos[0]?.url ? (
+                <img alt={state.resortName || "Resort photo"} className="h-56 w-full object-cover" src={state.photos[0].url} />
               ) : (
                 <div className="h-56 bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-300" />
               )}
@@ -1252,7 +1209,7 @@ export default function OwnerListingForm() {
                   <div className="mt-4 space-y-2 border-t border-zinc-200 pt-4 text-sm text-zinc-700">
                     <p>Platform fee: {ownerPriceCents ? formatMoney(payout.platformFeeCents) : "-"}</p>
                     <p>Owner net: {ownerPriceCents ? formatMoney(payout.ownerNetCents) : "-"}</p>
-                    <p>Photos: {state.photoUrls.length}</p>
+                    <p>Photos: {state.photos.length}</p>
                     <p>Amenities: {state.amenities.length || 0}</p>
                   </div>
                 </div>

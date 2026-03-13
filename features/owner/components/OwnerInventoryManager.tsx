@@ -4,6 +4,12 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import CityCountryLookup from "@/components/forms/CityCountryLookup";
+import ListingPhotoManager from "@/features/listings/components/ListingPhotoManager";
+import {
+  createExternalPhotoAsset,
+  serializePhotoAssets,
+  type ListingPhotoAsset,
+} from "@/lib/listings/media";
 import {
   AMENITY_OPTIONS,
   findResortCatalogMatches,
@@ -11,12 +17,7 @@ import {
   type AmenityOption,
   type ResortCatalogItem,
 } from "@/lib/listings/resortCatalog";
-import {
-  formatAmenityLabel,
-  getOwnershipCopy,
-  parsePhotoUrls,
-  toggleAmenity,
-} from "@/lib/listings/metadata";
+import { formatAmenityLabel, getOwnershipCopy, toggleAmenity } from "@/lib/listings/metadata";
 
 type OwnerInventoryItem = {
   id: string;
@@ -35,6 +36,7 @@ type OwnerInventoryItem = {
   description_template: string | null;
   amenities: string[] | null;
   photo_urls: string[] | null;
+  photo_storage_paths?: string[] | null;
 };
 
 type OwnerInventoryManagerProps = {
@@ -58,7 +60,7 @@ type FormState = {
   resortBookingUrl: string;
   descriptionTemplate: string;
   amenities: AmenityOption[];
-  photoLinks: string;
+  photos: ListingPhotoAsset[];
 };
 
 const initialState: FormState = {
@@ -78,7 +80,7 @@ const initialState: FormState = {
   resortBookingUrl: "",
   descriptionTemplate: "",
   amenities: [],
-  photoLinks: "",
+  photos: [],
 };
 
 const SEASON_OPTIONS = ["Platinum / Prime", "High season", "Shoulder season", "Low season", "Holiday season"];
@@ -94,7 +96,7 @@ function applyCatalogSelection(current: FormState, resort: ResortCatalogItem): F
     resortBookingUrl: resort.bookingBaseUrl ?? current.resortBookingUrl,
     descriptionTemplate: current.descriptionTemplate || resort.defaultDescription,
     amenities: resort.amenities,
-    photoLinks: resort.photos.join("\n"),
+    photos: resort.photos.map(createExternalPhotoAsset),
     unitType: current.unitType || resort.defaultUnitTypes[0] || "",
   };
 }
@@ -137,6 +139,8 @@ export default function OwnerInventoryManager({ items }: OwnerInventoryManagerPr
         throw new Error("Points power must be a positive value for points ownership.");
       }
 
+      const { photoUrls, photoStoragePaths } = serializePhotoAssets(state.photos);
+
       const { error } = await supabase.from("owner_inventory").insert({
         owner_id: user.id,
         label: state.label,
@@ -153,7 +157,8 @@ export default function OwnerInventoryManager({ items }: OwnerInventoryManagerPr
         resort_booking_url: state.resortBookingUrl || null,
         description_template: state.descriptionTemplate || null,
         amenities: state.amenities,
-        photo_urls: parsePhotoUrls(state.photoLinks),
+        photo_urls: photoUrls,
+        photo_storage_paths: photoStoragePaths,
       });
 
       if (error) throw error;
@@ -394,18 +399,14 @@ export default function OwnerInventoryManager({ items }: OwnerInventoryManagerPr
           </div>
         </div>
 
-        <label className="block text-sm">
-          Photo URLs
-          <textarea
-            className="mt-1 min-h-24 w-full rounded-xl border border-zinc-300 px-3 py-2"
-            placeholder="One URL per line or comma-separated"
-            value={state.photoLinks}
-            onChange={(e) => setState((current) => ({ ...current, photoLinks: e.target.value }))}
-          />
-          <p className="mt-1 text-xs text-zinc-600">
-            Recognized resorts can prefill these. Add your own hosted photo URLs to personalize the template.
-          </p>
-        </label>
+        <ListingPhotoManager
+          helperText="Recognized resorts can preload these. Upload your own unit photos or add hosted URLs."
+          minimumCount={3}
+          onChange={(photos) => setState((current) => ({ ...current, photos }))}
+          photos={state.photos}
+          scope="inventory"
+          title="Template photos"
+        />
 
         <label className="block text-sm">
           Inventory notes

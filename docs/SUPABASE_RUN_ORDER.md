@@ -18,7 +18,9 @@ Use this sequence for an **existing** Timeshare Connect database (non-destructiv
 7. `supabase/resort_portals_migration.sql`
 8. `supabase/role_both_migration.sql`
 9. `supabase/rls.sql`
-10. `supabase/health_check.sql` (post-migration verification)
+10. `supabase/listing_search_enrichment_migration.sql`
+11. `supabase/listing_media_storage_migration.sql`
+12. `supabase/health_check.sql` (post-migration verification)
 
 ## Notes
 
@@ -27,7 +29,7 @@ Use this sequence for an **existing** Timeshare Connect database (non-destructiv
 
 ## Quick Success Criteria
 
-After step 10:
+After step 12:
 
 - All expected tables appear in health check output.
 - RLS is enabled for protected tables.

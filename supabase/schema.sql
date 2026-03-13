@@ -56,6 +56,7 @@ create table public.owner_inventory (
   description_template text,
   amenities text[] not null default '{}',
   photo_urls text[] not null default '{}',
+  photo_storage_paths text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -103,6 +104,7 @@ create table public.listings (
   description_template text,
   amenities text[] not null default '{}',
   photo_urls text[] not null default '{}',
+  photo_storage_paths text[] not null default '{}',
   description text,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),

@@ -74,6 +74,20 @@ This file tracks major development changes in plain language.
 ### Verification
 - Verified production build after the inventory/searchability refresh (`npm run build` passed).
 
+### Storage-Backed Listing Photos
+- Added public listing media upload support with a dedicated Supabase Storage bucket:
+  - `listing-media`
+- Added owner-scoped storage policies and DB support for uploaded media paths:
+  - `photo_storage_paths` on `owner_inventory`
+  - `photo_storage_paths` on `listings`
+- Added reusable photo upload UI for owner inventory templates and listing creation:
+  - upload files directly to Supabase Storage
+  - keep hosted URL fallback support
+  - preserve public image URLs for traveler-facing pages
+- Added migration for existing databases:
+  - `supabase/listing_media_storage_migration.sql`
+- Updated Supabase ops docs to include the new migration and troubleshooting guidance.
+
 ## 2026-03-07
 
 ### Owner Add-Listing Wizard

@@ -15,10 +15,10 @@ export default async function HomePage() {
   return (
     <main className="tc-page mx-auto max-w-7xl space-y-6 p-6 md:p-8">
       <section className="tc-hero tc-fade-up rounded-3xl p-6 md:p-9">
-        <div className="relative z-10 grid gap-6 md:grid-cols-5 md:items-end">
-          <div className="md:col-span-3">
+        <div className="relative z-10 grid gap-6 md:grid-cols-12 md:items-start md:gap-8 lg:gap-10">
+          <div className="md:col-span-7 lg:col-span-8">
             <span className="tc-badge">Private Beta</span>
-            <h1 className="tc-title mt-4 text-5xl font-semibold tracking-tight md:text-7xl">
+            <h1 className="tc-title mt-4 max-w-4xl text-5xl font-semibold tracking-tight md:text-7xl">
               Designed to put luxury getaways within reach.
             </h1>
             <p className="tc-muted mt-4 max-w-2xl text-sm md:text-base">
@@ -37,6 +37,23 @@ export default async function HomePage() {
                 Explore destinations
               </Link>
             </div>
+          </div>
+          <div className="md:col-span-5 md:w-full lg:col-span-4">
+            <section className="tc-glass w-full rounded-2xl p-5 md:ml-auto md:mt-10 md:max-w-xs md:p-5 lg:max-w-sm lg:p-6">
+              <h2 className="tc-title text-2xl font-semibold">Account</h2>
+              <p className="tc-muted mt-2 text-sm leading-6">
+                Log in once, then choose your view from the login dropdown.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {!user ? (
+                  <Link className="tc-btn-primary rounded px-4 py-2 text-sm font-semibold" href="/login">
+                    Log in / Sign up
+                  </Link>
+                ) : (
+                  <SignOutButton />
+                )}
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -114,20 +131,6 @@ export default async function HomePage() {
           <Link className="tc-btn-secondary rounded px-4 py-2 text-sm" href="/trips">
             My Trips
           </Link>
-        </div>
-      </section>
-
-      <section className="tc-surface-soft rounded-2xl p-5">
-        <h2 className="tc-title text-2xl font-semibold">Account</h2>
-        <p className="tc-muted mt-1 text-sm">Log in once, then choose your view from the login dropdown.</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {!user ? (
-            <Link className="tc-btn-primary rounded px-4 py-2 text-sm" href="/login">
-              Log in / Sign up
-            </Link>
-          ) : (
-            <SignOutButton />
-          )}
         </div>
       </section>
     </main>

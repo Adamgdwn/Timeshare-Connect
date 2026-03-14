@@ -2,19 +2,17 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  getFullNameFromMetadata,
+  getRedirectPath,
+  getSignupRoleFromMetadata,
+  type LoginDestination,
+  type ProfileRole,
+  type SignupProfileRole,
+} from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
-type ProfileRole = "traveler" | "owner" | "both" | "admin";
-type LoginDestination = "traveler" | "owner";
-
-function getRedirectPath(role: ProfileRole, destination?: LoginDestination) {
-  if (role === "admin") return "/admin";
-  if (role === "both" && destination === "owner") return "/dashboard";
-  if (role === "both") return "/trips";
-  if (role === "owner") return "/dashboard";
-  return "/trips";
-}
 
 export default function AuthForm() {
   const router = useRouter();
@@ -24,12 +22,12 @@ export default function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [signupRole, setSignupRole] = useState<Exclude<ProfileRole, "admin">>("traveler");
+  const [signupRole, setSignupRole] = useState<SignupProfileRole>("traveler");
   const [loginDestination, setLoginDestination] = useState<LoginDestination>("traveler");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function ensureProfile(userId: string, fallbackRole: Exclude<ProfileRole, "admin">) {
+  async function ensureProfile(userId: string, fallbackRole: SignupProfileRole, fallbackFullName: string | null) {
     const { data: existing, error: existingError } = await supabase
       .from("profiles")
       .select("role")
@@ -47,7 +45,7 @@ export default function AuthForm() {
     const { error: insertError } = await supabase.from("profiles").insert({
       id: userId,
       role: fallbackRole,
-      full_name: fullName || null,
+      full_name: fallbackFullName,
     });
 
     if (insertError) {
@@ -64,13 +62,16 @@ export default function AuthForm() {
 
     try {
       if (mode === "signup") {
+        const emailRedirectTo = new URL("/auth/callback", window.location.origin).toString();
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               full_name: fullName || null,
+              role: signupRole,
             },
+            emailRedirectTo,
           },
         });
 
@@ -79,7 +80,7 @@ export default function AuthForm() {
         }
 
         if (data.user && data.session) {
-          const role = await ensureProfile(data.user.id, signupRole);
+          const role = await ensureProfile(data.user.id, signupRole, fullName.trim() || null);
           router.push(getRedirectPath(role, loginDestination));
           router.refresh();
           return;
@@ -102,7 +103,9 @@ export default function AuthForm() {
         throw new Error("No user returned from login.");
       }
 
-      const role = await ensureProfile(data.user.id, "traveler");
+      const fallbackRole = getSignupRoleFromMetadata(data.user.user_metadata) ?? "traveler";
+      const fallbackFullName = getFullNameFromMetadata(data.user.user_metadata);
+      const role = await ensureProfile(data.user.id, fallbackRole, fallbackFullName);
       router.push(getRedirectPath(role, loginDestination));
       router.refresh();
     } catch (error) {
@@ -186,7 +189,7 @@ export default function AuthForm() {
           <select
             className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
             value={signupRole}
-            onChange={(e) => setSignupRole(e.target.value as Exclude<ProfileRole, "admin">)}
+            onChange={(e) => setSignupRole(e.target.value as SignupProfileRole)}
           >
             <option value="traveler">Traveler</option>
             <option value="owner">Owner</option>

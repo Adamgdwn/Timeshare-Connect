@@ -22,6 +22,7 @@ http://localhost:3000
 In `.env.local`:
 
 ```env
+NEXT_PUBLIC_APP_URL=...
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...    # server-only
@@ -35,6 +36,7 @@ FEEDBACK_FROM_EMAIL=...
 Notes:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present (name must match exactly).
 - If you used Supabase "Publishable key", still map it to `NEXT_PUBLIC_SUPABASE_ANON_KEY` in this codebase.
+- In Supabase Auth settings, set `Site URL` to your live app origin and add `https://your-domain/auth/callback` to the allowed redirect URLs.
 
 ## 3. Supabase SQL Run Order (Existing DB)
 

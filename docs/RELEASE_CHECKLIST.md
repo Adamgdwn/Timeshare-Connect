@@ -18,8 +18,11 @@ Use this before deploying to Vercel.
 
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [ ] `NEXT_PUBLIC_APP_URL`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` (server-only)
 - [ ] Stripe vars as needed for current release scope
+- [ ] Supabase Auth `Site URL` matches the deployed origin
+- [ ] Supabase Auth redirect URLs include `/auth/callback`
 
 ## 4. Functional Smoke Test
 
@@ -45,4 +48,3 @@ Use this before deploying to Vercel.
 
 - [ ] Add a dated entry to `docs/CHANGELOG_DEV.md`.
 - [ ] Capture follow-up bugs/enhancements in your planning doc.
-

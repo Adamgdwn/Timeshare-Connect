@@ -36,6 +36,9 @@ export default async function HomePage() {
               <Link className="tc-btn-secondary rounded px-4 py-2 text-sm font-semibold" href="/search">
                 Explore destinations
               </Link>
+              <Link className="tc-btn-secondary rounded px-4 py-2 text-sm font-semibold" href="/how-it-works">
+                How it works
+              </Link>
             </div>
           </div>
           <div className="md:col-span-5 md:w-full lg:col-span-4">

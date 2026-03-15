@@ -43,6 +43,8 @@ In Vercel project settings -> `Environment Variables`, set:
 - `ADMIN_CONTACT_EMAIL`
 - `RESEND_API_KEY`
 - `FEEDBACK_FROM_EMAIL`
+- `OPENAI_API_KEY` if AI screenshot prefill is enabled
+- `OPENAI_LISTING_PREFILL_MODEL` if overriding the default model
 
 Apply to `Production`, `Preview`, and `Development` as needed.
 
@@ -60,7 +62,8 @@ Otherwise deploy manually in Vercel dashboard.
 4. Owner: offers -> accept/decline.
 5. Booking timeline status updates.
 6. Inventory template save/use flow.
-7. `Report a bug/idea` sends successfully.
+7. Owner AI screenshot prefill returns a draft and flags fields for review.
+8. `Report a bug/idea` sends successfully.
 
 ## 6. Share With Testers
 
@@ -82,4 +85,3 @@ Create a simple triage board:
 - `Feature request`
 
 Review daily during beta and ship fixes in small batches.
-

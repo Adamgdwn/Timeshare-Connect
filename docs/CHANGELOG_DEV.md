@@ -2,6 +2,42 @@
 
 This file tracks major development changes in plain language.
 
+## 2026-03-14
+
+### Auth Confirmation Link Fix
+- Fixed the signup confirmation flow so email confirmations no longer depend on a `localhost` fallback.
+- Added an app-side auth callback route:
+  - `app/auth/callback/route.ts`
+- Updated signup to send an explicit confirmation redirect instead of relying on Supabase default URL behavior.
+- Preserved selected signup role metadata through the confirmed-account flow so owner/both users do not fall back to traveler on first login.
+- Updated environment and release docs to call out:
+  - `NEXT_PUBLIC_APP_URL`
+  - Supabase Auth `Site URL`
+  - allowed redirect URL requirements for `/auth/callback`
+
+### AI Screenshot Prefill For Owner Listings
+- Added a new owner-side AI helper that can analyze up to 3 portal screenshots and prefill listing fields before publish.
+- Added a new API route for screenshot extraction:
+  - `app/api/listing-prefill/route.ts`
+- Added shared extraction schema and normalization helpers:
+  - `lib/listings/aiPrefill.ts`
+- Added a new listing wizard panel:
+  - `features/listings/components/ListingScreenshotPrefill.tsx`
+- Wired the AI draft into the existing owner add-listing wizard so it can prefill:
+  - resort and portal mapping
+  - ownership type
+  - visible dates or flexible window details
+  - unit type
+  - notes and amenity tags when clearly visible
+- Kept the flow review-first:
+  - AI applies a draft
+  - uncertain fields are flagged for owner review
+  - nothing auto-publishes
+- Added environment/docs support for:
+  - `OPENAI_API_KEY`
+  - `OPENAI_LISTING_PREFILL_MODEL`
+- Verified build stability after the AI prefill + auth-link update (`npm run build` passed).
+
 ## 2026-03-13
 
 ### Searchable Inventory Upload Refresh

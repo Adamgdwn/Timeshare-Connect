@@ -32,10 +32,13 @@ For larger cohorts, see:
 
 1. Log in as owner.
 2. Open `Inventory` and save a reusable template.
-3. Open `Add listing` and create listing from template.
-4. Open `Offers` and review traveler requests.
-5. Accept/decline an offer.
-6. Open booking timeline and submit owner-side updates.
+3. Open `Add listing` and test both owner flows:
+   - create a listing from template
+   - upload 1-3 portal screenshots and review the AI prefill draft
+4. Confirm any AI-prefilled fields before publishing the listing.
+5. Open `Offers` and review traveler requests.
+6. Accept/decline an offer.
+7. Open booking timeline and submit owner-side updates.
 
 ## Feedback Submission
 
@@ -62,3 +65,4 @@ Example idea report:
 - Payments are still partially placeholder.
 - Availability is owner-entered (not live resort integrations).
 - Verification is semi-manual.
+- AI screenshot prefill is assistive only and may miss or misread portal details; owners should review every flagged field.

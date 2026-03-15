@@ -20,6 +20,7 @@ Use this before deploying to Vercel.
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [ ] `NEXT_PUBLIC_APP_URL`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+- [ ] `OPENAI_API_KEY` if AI screenshot prefill is enabled
 - [ ] Stripe vars as needed for current release scope
 - [ ] Supabase Auth `Site URL` matches the deployed origin
 - [ ] Supabase Auth redirect URLs include `/auth/callback`

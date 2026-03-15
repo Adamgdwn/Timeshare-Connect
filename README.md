@@ -51,6 +51,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 - Next.js App Router, TypeScript, Tailwind.
 - Supabase for auth + DB, helpers in `lib/supabase/*`.
+- OpenAI-backed owner screenshot prefill is available server-side when `OPENAI_API_KEY` is configured.
 - Search destination suggestions combine live active listing values with a broad fallback datalist.
 - Public traveler pages use a polished premium theme (warm neutral surfaces + green/gold accents) tuned for low distraction.
 - Routes:

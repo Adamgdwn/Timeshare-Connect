@@ -26,6 +26,8 @@ Use `.env.local` for machine-specific secrets (logins, API keys, tokens).
 - `SMTP_*`: email login and sender settings.
 - `RESEND_API_KEY`: API key for direct in-app feedback email sending.
 - `FEEDBACK_FROM_EMAIL`: verified sender address for feedback emails.
+- `OPENAI_API_KEY`: server-side key used for AI-powered listing screenshot prefill.
+- `OPENAI_LISTING_PREFILL_MODEL`: optional override for the model used to extract listing fields from screenshots.
 - `S3_*`: file storage credentials.
 
 ## Optional Profiles

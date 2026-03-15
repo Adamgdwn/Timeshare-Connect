@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import CityCountryLookup from "@/components/forms/CityCountryLookup";
 import ListingPhotoManager from "@/features/listings/components/ListingPhotoManager";
+import ListingScreenshotPrefill from "@/features/listings/components/ListingScreenshotPrefill";
 import { calculatePayoutBreakdown } from "@/lib/pricing";
 import { OWNER_LISTING_DRAFT_KEY } from "@/lib/listings/draft";
 import { formatListingDateSummary, getNightCount } from "@/lib/listings/availability";
+import { type AiListingPrefillResult } from "@/lib/listings/aiPrefill";
 import {
   createExternalPhotoAsset,
   serializePhotoAssets,
@@ -193,6 +195,44 @@ function findPortalIdByResortName(portals: ResortPortal[], resortName: string) {
   return portals.find((portal) => normalized.includes(portal.resort_name.trim().toLowerCase()))?.id ?? "";
 }
 
+function findPortalIdByBrand(portals: ResortPortal[], brand: string) {
+  const normalized = brand.trim().toLowerCase();
+  if (!normalized) return "";
+
+  const exact = portals.find((portal) => portal.brand?.trim().toLowerCase() === normalized);
+  if (exact) return exact.id;
+
+  return (
+    portals.find((portal) => portal.brand?.trim().toLowerCase().includes(normalized) || normalized.includes(portal.brand?.trim().toLowerCase() ?? ""))?.id ??
+    ""
+  );
+}
+
+function inferAvailabilityModeFromAi(result: AiListingPrefillResult) {
+  if (result.extracted.checkInDate && result.extracted.checkOutDate) {
+    return "exact" as const;
+  }
+
+  if (
+    result.extracted.availableStartDate ||
+    result.extracted.availableEndDate ||
+    result.extracted.minimumNights ||
+    result.extracted.maximumNights
+  ) {
+    return "flex" as const;
+  }
+
+  return result.extracted.availabilityMode;
+}
+
+function findPortalIdFromAi(result: AiListingPrefillResult, portals: ResortPortal[], resortName: string) {
+  return (
+    (result.extracted.resortPortalName ? findPortalIdByResortName(portals, result.extracted.resortPortalName) : "") ||
+    (result.extracted.portalBrand ? findPortalIdByBrand(portals, result.extracted.portalBrand) : "") ||
+    (resortName ? findPortalIdByResortName(portals, resortName) : "")
+  );
+}
+
 function ensureAmenityOptions(values: string[] | null | undefined): AmenityOption[] {
   return (values ?? []).filter((value): value is AmenityOption =>
     (AMENITY_OPTIONS as readonly string[]).includes(value)
@@ -270,6 +310,69 @@ function applyTemplateSelection(
     descriptionTemplate: template.description_template || catalogResort?.defaultDescription || "",
     description: current.description || template.description_template || catalogResort?.defaultDescription || "",
     amenities: ensureAmenityOptions([...(template.amenities ?? []), ...(catalogResort?.amenities ?? [])]),
+  };
+}
+
+function applyAiPrefillSelection(
+  current: ListingFormState,
+  result: AiListingPrefillResult,
+  portals: ResortPortal[]
+): ListingFormState {
+  const inferredResort = inferResortCatalogItem({
+    resortName: result.extracted.resortName ?? current.resortName,
+    city: result.extracted.city ?? current.city,
+  });
+
+  let next = current;
+  if (inferredResort) {
+    next = applyCatalogSelection(next, inferredResort, portals);
+  }
+
+  const availabilityMode = inferAvailabilityModeFromAi(result) ?? next.availabilityMode;
+  const resortName = result.extracted.resortName ?? next.resortName;
+  const unitType = result.extracted.unitType ?? next.unitType;
+  const season = result.extracted.season ?? next.season;
+  const homeWeek = result.extracted.homeWeek ?? next.homeWeek;
+  const portalId = findPortalIdFromAi(result, portals, resortName) || next.selectedResortPortalId;
+  const mergedAmenities = ensureAmenityOptions([...next.amenities, ...result.extracted.amenities]);
+
+  return {
+    ...next,
+    selectedInventoryId: "",
+    selectedResortPortalId: portalId,
+    resortSearch: resortName || next.resortSearch,
+    resortKey: inferredResort?.key || next.resortKey,
+    availabilityMode,
+    ownershipType: result.extracted.ownershipType ?? next.ownershipType,
+    seasonOption: resolveSeasonOption(season),
+    season,
+    homeWeekOption: resolveHomeWeekOption(homeWeek),
+    homeWeek,
+    pointsPower: result.extracted.pointsPower ? String(result.extracted.pointsPower) : next.pointsPower,
+    inventoryNotes: result.extracted.inventoryNotes ?? next.inventoryNotes,
+    resortName,
+    city: result.extracted.city ?? next.city,
+    country: result.extracted.country ?? next.country,
+    availableStartDate: availabilityMode === "flex" ? result.extracted.availableStartDate ?? next.availableStartDate : "",
+    availableEndDate: availabilityMode === "flex" ? result.extracted.availableEndDate ?? next.availableEndDate : "",
+    minimumNights:
+      availabilityMode === "flex"
+        ? result.extracted.minimumNights
+          ? String(result.extracted.minimumNights)
+          : next.minimumNights
+        : next.minimumNights,
+    maximumNights:
+      availabilityMode === "flex"
+        ? result.extracted.maximumNights
+          ? String(result.extracted.maximumNights)
+          : next.maximumNights
+        : "",
+    checkInDate: availabilityMode === "exact" ? result.extracted.checkInDate ?? next.checkInDate : "",
+    checkOutDate: availabilityMode === "exact" ? result.extracted.checkOutDate ?? next.checkOutDate : "",
+    unitTypeOption: resolveUnitTypeOption(unitType),
+    unitType,
+    resortBookingUrl: result.extracted.resortBookingUrl ?? next.resortBookingUrl,
+    amenities: mergedAmenities.length ? mergedAmenities : next.amenities,
   };
 }
 
@@ -652,6 +755,14 @@ export default function OwnerListingForm() {
 
       {currentStep === 1 ? (
         <div className="space-y-5">
+          <ListingScreenshotPrefill
+            onApply={(result) => {
+              setState((current) => applyAiPrefillSelection(current, result, resortPortals));
+              setNormalPriceEditedManually(false);
+              setDraftNotice(`AI draft applied at ${new Date().toLocaleTimeString()}. Review flagged fields before publishing.`);
+            }}
+          />
+
           <section className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
